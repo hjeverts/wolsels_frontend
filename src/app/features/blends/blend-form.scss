@@ -1,0 +1,110 @@
+.help {
+  margin-top: 0;
+}
+
+.components {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.component-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 140px 40px;
+  gap: 12px;
+  align-items: start;
+
+  button {
+    margin-top: 4px;
+  }
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  // Uitlijnen met de gewichtkolom erboven.
+  padding-right: 52px;
+
+  .total {
+    width: 140px;
+  }
+}
+
+.basis {
+  --mat-form-field-outlined-outline-color: var(--mat-sys-tertiary);
+  --mat-form-field-outlined-outline-width: 2px;
+}
+
+.pin {
+  color: var(--mat-sys-tertiary);
+  font-size: 18px;
+}
+
+.warn {
+  color: var(--mat-sys-error);
+}
+
+.calc-error {
+  color: var(--mat-sys-on-surface-variant);
+  margin: 12px 0 0;
+}
+
+.ratio-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 16px;
+  gap: 2px;
+
+  span {
+    background: var(--mat-sys-surface-container-highest);
+  }
+}
+
+.toggle-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.dye-toggle {
+  margin-left: auto;
+}
+
+.notes {
+  width: 100%;
+}
+
+.color-pick {
+  position: relative;
+  display: inline-flex;
+  padding: 0 12px;
+
+  input[type='color'] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+}
+
+@media (max-width: 640px) {
+  .component-row {
+    grid-template-columns: 1fr 1fr 40px;
+
+    .wool {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .totals-row {
+    padding-right: 0;
+  }
+}

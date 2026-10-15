@@ -1,0 +1,16 @@
+<mat-toolbar class="toolbar">
+  <span class="brand"><mat-icon>gesture</mat-icon> Wolsels</span>
+</mat-toolbar>
+<nav mat-tab-nav-bar [tabPanel]="panel" mat-stretch-tabs="false" class="nav">
+  @for (link of links; track link.path) {
+    <a mat-tab-link [routerLink]="link.path" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive">
+      <mat-icon class="nav-icon">{{ link.icon }}</mat-icon>
+      <span class="nav-label">{{ link.label }}</span>
+    </a>
+  }
+</nav>
+<mat-tab-nav-panel #panel>
+  <main class="page">
+    <router-outlet />
+  </main>
+</mat-tab-nav-panel>
