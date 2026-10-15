@@ -1,7 +1,13 @@
 import { Routes } from '@angular/router';
+import { authGuard, guestGuard } from './core/auth.guard';
 
-export const routes: Routes = [
+const appRoutes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'voorraad' },
+  {
+    path: 'account',
+    title: 'Account · Wolsels',
+    loadComponent: () => import('./features/auth/account').then((m) => m.Account),
+  },
   {
     path: 'voorraad',
     title: 'Voorraad · Wolsels',
@@ -67,5 +73,33 @@ export const routes: Routes = [
     title: 'Locaties · Wolsels',
     loadComponent: () => import('./features/locations/location-list').then((m) => m.LocationList),
   },
-  { path: '**', redirectTo: 'voorraad' },
+];
+
+export const routes: Routes = [
+  {
+    path: 'inloggen',
+    title: 'Inloggen · Wolsels',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/login').then((m) => m.Login),
+  },
+  {
+    path: 'registreren',
+    title: 'Registreren · Wolsels',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/register').then((m) => m.Register),
+  },
+  {
+    path: 'wachtwoord-vergeten',
+    title: 'Wachtwoord vergeten · Wolsels',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/forgot-password').then((m) => m.ForgotPassword),
+  },
+  {
+    // Bereikbaar via de link in de herstelmail, ook als je (nog) ingelogd bent.
+    path: 'wachtwoord-herstellen',
+    title: 'Nieuw wachtwoord · Wolsels',
+    loadComponent: () => import('./features/auth/reset-password').then((m) => m.ResetPassword),
+  },
+  { path: '', canActivate: [authGuard], children: appRoutes },
+  { path: '**', redirectTo: '' },
 ];

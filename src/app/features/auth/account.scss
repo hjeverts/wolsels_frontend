@@ -1,0 +1,85 @@
+.badge {
+  font: var(--mat-sys-label-medium);
+  padding: 2px 10px;
+  border-radius: 12px;
+
+  &.on {
+    background: var(--mat-sys-primary-container);
+    color: var(--mat-sys-on-primary-container);
+  }
+
+  &.off {
+    background: var(--mat-sys-surface-container-highest);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.welcome {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+}
+
+.steps li {
+  margin-bottom: 8px;
+}
+
+.qr {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+
+  img {
+    border-radius: 8px;
+    background: #fff;
+  }
+}
+
+.key {
+  font-size: 1.05em;
+  letter-spacing: 0.05em;
+  user-select: all;
+}
+
+.code-form {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    width: 160px;
+  }
+
+  button {
+    margin-top: 6px;
+  }
+}
+
+.codes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  padding: 16px;
+  margin: 0 0 8px;
+  list-style: none;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container);
+
+  code {
+    font-size: 1.05em;
+    user-select: all;
+  }
+}
+
+.form-actions.start {
+  justify-content: flex-start;
+}
+
+.error,
+.warn {
+  color: var(--mat-sys-error);
+}

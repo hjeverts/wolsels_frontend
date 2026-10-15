@@ -1,14 +1,34 @@
 <mat-toolbar class="toolbar">
-  <span class="brand"><mat-icon>gesture</mat-icon> Wolsels</span>
-</mat-toolbar>
-<nav mat-tab-nav-bar [tabPanel]="panel" mat-stretch-tabs="false" class="nav">
-  @for (link of links; track link.path) {
-    <a mat-tab-link [routerLink]="link.path" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive">
-      <mat-icon class="nav-icon">{{ link.icon }}</mat-icon>
-      <span class="nav-label">{{ link.label }}</span>
-    </a>
+  <a class="brand" routerLink="/"><mat-icon>gesture</mat-icon> Wolsels</a>
+  <span class="spacer"></span>
+  @if (auth.user(); as user) {
+    <button mat-button class="user" [matMenuTriggerFor]="userMenu" aria-label="Accountmenu">
+      <mat-icon>account_circle</mat-icon>
+      <span class="user-email">{{ user.email }}</span>
+    </button>
+    <mat-menu #userMenu="matMenu" xPosition="before">
+      <a mat-menu-item routerLink="/account">
+        <mat-icon>manage_accounts</mat-icon>
+        <span>Account en 2FA</span>
+      </a>
+      <mat-divider />
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Uitloggen</span>
+      </button>
+    </mat-menu>
   }
-</nav>
+</mat-toolbar>
+@if (auth.user()) {
+  <nav mat-tab-nav-bar [tabPanel]="panel" mat-stretch-tabs="false" class="nav">
+    @for (link of links; track link.path) {
+      <a mat-tab-link [routerLink]="link.path" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive">
+        <mat-icon class="nav-icon">{{ link.icon }}</mat-icon>
+        <span class="nav-label">{{ link.label }}</span>
+      </a>
+    }
+  </nav>
+}
 <mat-tab-nav-panel #panel>
   <main class="page">
     <router-outlet />

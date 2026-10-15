@@ -75,6 +75,7 @@ export class BlendForm implements OnInit {
   protected readonly percentages = signal<number[]>([]);
   protected readonly calcError = signal<string | null>(null);
   protected readonly saving = signal(false);
+  protected readonly stockDeducted = signal(false);
 
   protected readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
@@ -155,6 +156,7 @@ export class BlendForm implements OnInit {
 
   private load(blend: Blend): void {
     this.loadedBlend = blend;
+    this.stockDeducted.set(blend.stockDeducted);
     this.components.clear();
     blend.components.forEach((c) => this.components.push(this.createComponent(c.woolId, c.ratio, c.weightGrams)));
     this.form.patchValue({
@@ -316,7 +318,11 @@ export class BlendForm implements OnInit {
 
   protected remove(): void {
     this.confirm
-      .ask('Mengsel verwijderen', `Weet je zeker dat je "${this.loadedBlend?.name}" wilt verwijderen?`)
+      .ask(
+        'Mengsel verwijderen',
+        `Weet je zeker dat je "${this.loadedBlend?.name}" wilt verwijderen?` +
+          (this.loadedBlend?.stockDeducted ? ' De afgeboekte wol gaat terug naar de voorraad.' : ''),
+      )
       .pipe(
         filter(Boolean),
         switchMap(() => this.api.blends.delete(+this.id()!)),

@@ -6,6 +6,22 @@
   </mat-button-toggle-group>
 </div>
 
+@if (status() === 'Spun') {
+  <p class="stock-info">
+    <mat-icon inline>inventory_2</mat-icon>
+    @if (stockDeducted()) {
+      De wol van dit mengsel is van de voorraad afgeboekt. Wijzigingen in de gewichten worden bij opslaan verrekend;
+      terugzetten naar Gepland boekt alles terug.
+    } @else {
+      Bij opslaan wordt de wol van dit mengsel van de voorraad afgeboekt.
+    }
+  </p>
+} @else if (stockDeducted()) {
+  <p class="stock-info">
+    <mat-icon inline>undo</mat-icon> Bij opslaan gaat de afgeboekte wol terug naar de voorraad.
+  </p>
+}
+
 <form [formGroup]="form" (ngSubmit)="save()">
   <div class="form-grid">
     <mat-form-field class="span-all">

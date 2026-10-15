@@ -1,0 +1,43 @@
+:host {
+  display: flex;
+  justify-content: center;
+  padding-top: 32px;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+}
+
+h1 {
+  font: var(--mat-sys-headline-small);
+  margin: 0 0 8px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+}
+
+.error {
+  color: var(--mat-sys-error);
+  margin: 0 0 12px;
+}
+
+.success {
+  color: var(--mat-sys-primary);
+  margin: 0 0 12px;
+}
+
+.links {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+button[type='submit'] {
+  margin-top: 8px;
+}

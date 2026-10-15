@@ -4,11 +4,11 @@ Angular-app (Angular 22, Angular Material) voor Wolsels: wolvoorraad, mengsels m
 gewichtsberekening, spinresultaten (opbrengst, garendikte, twijnen, verven) en de productie van ruwe
 wol door eigen dieren of per locatie.
 
-Hoort bij [wolsels-backend](../wolsels-backend) en [wolsels-deploy](../wolsels-deploy).
+Hoort bij [wolsels_backend](https://github.com/hjeverts/wolsels_backend) en [wolsels_deploy](https://github.com/hjeverts/wolsels_deploy).
 
 ## Ontwikkelen
 
-Start eerst de backend (`dotnet run --project src/Wolsels.Api` in wolsels-backend, poort 5262), dan:
+Start eerst de backend (`dotnet run --project src/Wolsels.Api` in wolsels_backend, poort 5262), dan:
 
 ```sh
 npm install
@@ -26,6 +26,11 @@ npm run build
 | `/productie`  | Oogsten ruwe wol, totalen per maand en per dier/locatie                   |
 | `/dieren`     | Dieren (bv. angorakonijnen) met locatie en totale opbrengst               |
 | `/locaties`   | Locaties; oogsten kunnen ook direct op een locatie geboekt worden         |
+| `/account`    | Tweestapsverificatie (QR-code, herstelcodes) en wachtwoord wijzigen       |
+| `/inloggen`, `/registreren`, `/wachtwoord-vergeten`, `/wachtwoord-herstellen` | Accounts |
+
+Alle pagina's behalve de account-pagina's vereisen een login (`authGuard`). Een verlopen sessie
+(401) stuurt terug naar de inlogpagina, met daarna een terugkeer naar de oorspronkelijke pagina.
 
 ### Mengverhouding
 
@@ -41,6 +46,11 @@ bij opslaan met dezelfde logica opnieuw. Het maximaal aantal soorten komt uit de
 docker build -t wolsels-frontend .
 docker run -p 8080:80 -e API_UPSTREAM=http://<backend-host>:8080 wolsels-frontend
 ```
+
+De nginx-configuratie zet beveiligingsheaders, waaronder een strikte Content-Security-Policy
+(daarom staat het inlinen van kritieke CSS uit in `angular.json`). Het client-IP wordt alleen van
+proxies op interne netwerken overgenomen, zodat de pogingslimieten van de backend niet te omzeilen
+zijn met een vervalste `X-Forwarded-For`.
 
 nginx serveert de app en stuurt `/api/` door naar `API_UPSTREAM`. `NGINX_RESOLVER` (standaard Docker-DNS
 `127.0.0.11`) wordt gebruikt om die hostnaam op te zoeken; buiten Docker zet je hier je eigen DNS-server.

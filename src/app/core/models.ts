@@ -48,6 +48,7 @@ export interface Blend extends SpinningResult {
   id: number;
   name: string;
   status: BlendStatus;
+  stockDeducted: boolean;
   basis: CalculationBasis;
   basisComponentIndex: number | null;
   inputWeightGrams: number;

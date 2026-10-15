@@ -1,14 +1,28 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
+import { AuthService } from './auth.service';
 
-/** Toont fouten van de API (ProblemDetails) als melding. */
+/**
+ * Toont fouten van de API (ProblemDetails) als melding. Een verlopen sessie stuurt naar de inlogpagina.
+ * Fouten van /api/auth worden door de formulieren zelf getoond.
+ */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const snackBar = inject(MatSnackBar);
+  const router = inject(Router);
+  const auth = inject(AuthService);
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      snackBar.open(describe(error), 'Sluiten', { duration: 8000 });
+      if (req.url.startsWith('/api/auth')) return throwError(() => error);
+      if (error.status === 401) {
+        if (auth.user()) snackBar.open('Je sessie is verlopen. Log opnieuw in.', 'Sluiten', { duration: 6000 });
+        auth.user.set(null);
+        router.navigate(['/inloggen'], { queryParams: { terug: router.url } });
+      } else {
+        snackBar.open(describe(error), 'Sluiten', { duration: 8000 });
+      }
       return throwError(() => error);
     }),
   );

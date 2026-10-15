@@ -8,6 +8,16 @@
   align-items: center;
   gap: 8px;
   font: var(--mat-sys-title-large);
+  color: inherit;
+  text-decoration: none;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.user {
+  --mat-button-text-label-text-color: var(--mat-sys-on-primary);
 }
 
 .nav {
@@ -25,6 +35,7 @@
 }
 
 @media (max-width: 640px) {
+  .user-email,
   .nav-label {
     display: none;
   }

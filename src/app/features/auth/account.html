@@ -1,0 +1,115 @@
+<div class="page-header">
+  <h1>Account</h1>
+  <span class="muted">{{ auth.user()?.email }}</span>
+</div>
+
+@if (welkom() && !auth.user()?.twoFactorEnabled) {
+  <p class="welcome">
+    <mat-icon inline>waving_hand</mat-icon> Welkom bij Wolsels! Zet tweestapsverificatie aan om je account extra te beveiligen.
+  </p>
+}
+
+<mat-card appearance="outlined" class="section">
+  <mat-card-content>
+    <h2 class="section-title">
+      <mat-icon>phonelink_lock</mat-icon> Tweestapsverificatie (2FA)
+      @if (auth.user()?.twoFactorEnabled) {
+        <span class="badge on">Aan</span>
+      } @else {
+        <span class="badge off">Uit</span>
+      }
+    </h2>
+
+    @if (recoveryCodes(); as codes) {
+      <div class="recovery">
+        <p>
+          <strong>Bewaar deze herstelcodes op een veilige plek.</strong> Ben je je telefoon kwijt, dan log je
+          hiermee in. Elke code werkt één keer; ze worden niet opnieuw getoond.
+        </p>
+        <ul class="codes">
+          @for (c of codes; track c) {
+            <li><code>{{ c }}</code></li>
+          }
+        </ul>
+        <div class="form-actions">
+          <button mat-stroked-button type="button" (click)="downloadRecoveryCodes()"><mat-icon>download</mat-icon> Downloaden</button>
+          <button mat-flat-button type="button" (click)="recoveryCodes.set(null)">Ik heb ze bewaard</button>
+        </div>
+      </div>
+    } @else if (setup(); as s) {
+      <ol class="steps">
+        <li>Open een authenticator-app (bv. Google Authenticator, Microsoft Authenticator, Aegis of 1Password).</li>
+        <li>
+          Scan deze QR-code, of voer de sleutel handmatig in:
+          <div class="qr">
+            <img [src]="s.qr" alt="QR-code voor je authenticator-app" width="220" height="220" />
+            <code class="key">{{ s.sharedKey }}</code>
+          </div>
+        </li>
+        <li>Vul de 6-cijferige code in die de app toont.</li>
+      </ol>
+      <form [formGroup]="codeForm" (ngSubmit)="enable()" class="code-form">
+        <mat-form-field>
+          <mat-label>Code</mat-label>
+          <input matInput formControlName="code" inputmode="numeric" autocomplete="one-time-code" required />
+        </mat-form-field>
+        <button mat-flat-button type="submit" [disabled]="busy()">Inschakelen</button>
+        <button mat-button type="button" (click)="cancelSetup()">Annuleren</button>
+      </form>
+    } @else if (auth.user()?.twoFactorEnabled) {
+      <p>
+        Bij het inloggen vragen we naast je wachtwoord een code uit je authenticator-app.
+        Je hebt nog <strong>{{ auth.user()?.recoveryCodesLeft }}</strong> herstelcodes.
+      </p>
+      @if ((auth.user()?.recoveryCodesLeft ?? 0) < 3) {
+        <p class="warn"><mat-icon inline>warning</mat-icon> Je hebt bijna geen herstelcodes meer. Maak nieuwe aan.</p>
+      }
+      <div class="form-actions start">
+        <button mat-stroked-button type="button" (click)="newRecoveryCodes()"><mat-icon>key</mat-icon> Nieuwe herstelcodes</button>
+        <button mat-button type="button" (click)="disable()">Uitschakelen</button>
+      </div>
+    } @else {
+      <p>
+        Met tweestapsverificatie heb je naast je wachtwoord ook een code uit een app op je telefoon nodig.
+        Zo kan niemand inloggen met alleen je wachtwoord.
+      </p>
+      <div class="form-actions start">
+        <button mat-flat-button type="button" (click)="startSetup()"><mat-icon>add_moderator</mat-icon> 2FA instellen</button>
+      </div>
+    }
+
+    @if (twoFactorError()) {
+      <p class="error" role="alert">{{ twoFactorError() }}</p>
+    }
+  </mat-card-content>
+</mat-card>
+
+<mat-card appearance="outlined" class="section">
+  <mat-card-content>
+    <h2 class="section-title"><mat-icon>password</mat-icon> Wachtwoord wijzigen</h2>
+    <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form-grid">
+      <mat-form-field class="span-all">
+        <mat-label>Huidig wachtwoord</mat-label>
+        <input matInput type="password" formControlName="oldPassword" autocomplete="current-password" required />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Nieuw wachtwoord</mat-label>
+        <input matInput type="password" formControlName="password" autocomplete="new-password" required />
+        <mat-hint>Minimaal {{ minLength }} tekens.</mat-hint>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Nieuw wachtwoord herhalen</mat-label>
+        <input matInput type="password" formControlName="confirm" autocomplete="new-password" required />
+      </mat-form-field>
+      @if (passwordForm.hasError('mismatch') && passwordForm.controls.confirm.touched) {
+        <p class="error span-all">De wachtwoorden zijn niet gelijk.</p>
+      }
+      @if (passwordError()) {
+        <p class="error span-all" role="alert">{{ passwordError() }}</p>
+      }
+      <div class="form-actions span-all">
+        <button mat-flat-button type="submit">Wachtwoord wijzigen</button>
+      </div>
+    </form>
+  </mat-card-content>
+</mat-card>
