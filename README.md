@@ -44,7 +44,7 @@ bij opslaan met dezelfde logica opnieuw. Het maximaal aantal soorten komt uit de
 
 ```sh
 docker build -t wolsels-frontend .
-docker run -p 8080:80 -e API_UPSTREAM=http://<backend-host>:8080 wolsels-frontend
+docker run -p 8080:8080 -e API_UPSTREAM=http://<backend-host>:8080 wolsels-frontend
 ```
 
 De nginx-configuratie zet beveiligingsheaders, waaronder een strikte Content-Security-Policy
