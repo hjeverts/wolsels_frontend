@@ -111,6 +111,7 @@ export interface Harvest {
   method: string | null;
   grade: string | null;
   woolId: number | null;
+  woolName: string | null;
   notes: string | null;
 }
 
@@ -123,6 +124,8 @@ export interface HarvestRequest {
   grade: string | null;
   notes: string | null;
   addToStock: boolean;
+  /** Bestaande partij om bij te tellen; null = nieuwe partij. */
+  stockWoolId: number | null;
 }
 
 export interface ProductionSummary {

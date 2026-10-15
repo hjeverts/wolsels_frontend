@@ -1,18 +1,20 @@
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
-import { filter, forkJoin, switchMap } from 'rxjs';
+import { EMPTY, combineLatest, forkJoin, of, startWith, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
-import { Animal, Location } from '../../core/models';
+import { Animal, Harvest, Location, Wool } from '../../core/models';
+import { GramsPipe } from '../../shared/grams.pipe';
 import { HARVEST_GRADES, HARVEST_METHODS } from '../../core/yarn';
 import { ConfirmService } from '../../shared/confirm.service';
 import { emptyToNull, toNumber, today } from '../../shared/form-utils';
@@ -27,11 +29,12 @@ type Source = 'animal' | 'location';
     MatAutocompleteModule,
     MatButtonModule,
     MatButtonToggleModule,
-    MatCheckboxModule,
+    MatRadioModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
     MatSelectModule,
+    GramsPipe,
   ],
   template: `
     <div class="page-header">
@@ -114,14 +117,41 @@ type Source = 'animal' | 'location';
             </mat-form-field>
           </div>
 
-          @if (!id()) {
-            <mat-checkbox formControlName="addToStock">Direct als partij aan de wolvoorraad toevoegen</mat-checkbox>
-          } @else if (woolId()) {
-            <p class="muted">
-              <mat-icon inline>inventory_2</mat-icon> Deze oogst is toegevoegd aan de
-              <a [routerLink]="['/voorraad', woolId()]">voorraad</a>.
-            </p>
-          }
+          <div class="stock">
+            <h2 class="section-title"><mat-icon>inventory_2</mat-icon> Voorraad</h2>
+            @if (woolId()) {
+              <p>
+                Deze oogst zit in de voorraadpartij
+                <a [routerLink]="['/voorraad', woolId()]">{{ woolName() }}</a>.
+                <span class="muted">Pas je het gewicht aan, dan wordt het verschil met de partij verrekend.</span>
+              </p>
+            } @else {
+              <mat-radio-group formControlName="stockMode" class="stock-modes" aria-label="Voorraad">
+                <mat-radio-button value="none">Niet aan de voorraad toevoegen</mat-radio-button>
+                <mat-radio-button value="new">Als nieuwe partij toevoegen</mat-radio-button>
+                <mat-radio-button value="existing" [disabled]="!wools().length">Bijtellen bij een bestaande partij</mat-radio-button>
+              </mat-radio-group>
+              @if (stockMode() === 'existing') {
+                <mat-form-field class="stock-wool">
+                  <mat-label>Partij</mat-label>
+                  <mat-select formControlName="stockWoolId" required>
+                    @if (suggestedWools().length) {
+                      <mat-optgroup [label]="source() === 'animal' ? 'Eerder gebruikt voor dit dier' : 'Eerder gebruikt voor deze locatie'">
+                        @for (w of suggestedWools(); track w.id) {
+                          <mat-option [value]="w.id">{{ w.name }} <span class="muted">· {{ w.weightGrams | grams }}</span></mat-option>
+                        }
+                      </mat-optgroup>
+                    }
+                    <mat-optgroup label="Alle partijen">
+                      @for (w of otherWools(); track w.id) {
+                        <mat-option [value]="w.id">{{ w.name }} <span class="muted">· {{ w.woolType }} · {{ w.weightGrams | grams }}</span></mat-option>
+                      }
+                    </mat-optgroup>
+                  </mat-select>
+                </mat-form-field>
+              }
+            }
+          </div>
 
           <div class="form-actions">
             @if (id()) {
@@ -142,6 +172,19 @@ type Source = 'animal' | 'location';
       gap: 12px;
       margin-bottom: 20px;
     }
+    .stock {
+      margin: 8px 0 16px;
+    }
+    .stock-modes {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stock-wool {
+      width: 100%;
+      max-width: 480px;
+      margin-top: 12px;
+    }
   `,
 })
 export class HarvestForm implements OnInit {
@@ -159,6 +202,10 @@ export class HarvestForm implements OnInit {
   protected readonly loaded = signal(false);
   protected readonly saving = signal(false);
   protected readonly woolId = signal<number | null>(null);
+  protected readonly woolName = signal<string | null>(null);
+  protected readonly wools = signal<Wool[]>([]);
+  /** Partijen waar eerdere oogsten van hetzelfde dier / dezelfde locatie in zitten, nieuwste eerst. */
+  private readonly suggestedIds = signal<number[]>([]);
 
   protected readonly form = this.fb.group({
     source: this.fb.control<Source>('animal'),
@@ -169,8 +216,15 @@ export class HarvestForm implements OnInit {
     method: [''],
     grade: [''],
     notes: [''],
-    addToStock: [false],
+    stockMode: this.fb.control<'none' | 'new' | 'existing'>('none'),
+    stockWoolId: this.fb.control<number | null>(null),
   });
+
+  protected readonly stockMode = toSignal(this.form.controls.stockMode.valueChanges, { initialValue: 'none' as const });
+  protected readonly suggestedWools = computed(() =>
+    this.suggestedIds().map((id) => this.wools().find((w) => w.id === id)).filter((w): w is Wool => !!w),
+  );
+  protected readonly otherWools = computed(() => this.wools().filter((w) => !this.suggestedIds().includes(w.id)));
 
   protected readonly source = toSignal(this.form.controls.source.valueChanges, { initialValue: 'animal' as Source });
   private readonly animalIdValue = toSignal(this.form.controls.animalId.valueChanges, { initialValue: null });
@@ -180,10 +234,46 @@ export class HarvestForm implements OnInit {
     this.animals().filter((a) => a.active || a.id === this.animalIdValue()),
   );
 
+  constructor() {
+    // Bij een gekozen dier/locatie de partijen van eerdere oogsten voorstellen.
+    const controls = this.form.controls;
+    combineLatest([
+      controls.source.valueChanges.pipe(startWith(controls.source.value)),
+      controls.animalId.valueChanges.pipe(startWith(controls.animalId.value)),
+      controls.locationId.valueChanges.pipe(startWith(controls.locationId.value)),
+    ])
+      .pipe(
+        switchMap(([source, animalId, locationId]) => {
+          const sourceId = source === 'animal' ? animalId : locationId;
+          if (!sourceId) return of([] as Harvest[]);
+          return this.api.harvests.list(source === 'animal' ? { animalId: sourceId } : { locationId: sourceId });
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe((harvests) => this.suggest(harvests));
+  }
+
+  private suggest(harvests: Harvest[]): void {
+    const ids = [...new Set(harvests.filter((h) => h.woolId && String(h.id) !== this.id()).map((h) => h.woolId!))];
+    this.suggestedIds.set(ids);
+    // Nieuwe oogst: standaard bijtellen bij de meest recente partij van dit dier / deze locatie.
+    const mode = this.form.controls.stockMode;
+    if (!this.id() && mode.pristine) {
+      if (ids.length) {
+        mode.setValue('existing');
+        this.form.controls.stockWoolId.setValue(ids[0]);
+      } else {
+        mode.setValue('none');
+        this.form.controls.stockWoolId.setValue(null);
+      }
+    }
+  }
+
   ngOnInit(): void {
-    forkJoin([this.api.animals.list(), this.api.locations.list()]).subscribe(([animals, locations]) => {
+    forkJoin([this.api.animals.list(), this.api.locations.list(), this.api.wools.list()]).subscribe(([animals, locations, wools]) => {
       this.animals.set(animals);
       this.locations.set(locations);
+      this.wools.set(wools);
       if (!animals.some((a) => a.active) && locations.length) this.form.controls.source.setValue('location');
 
       const id = this.id();
@@ -201,9 +291,11 @@ export class HarvestForm implements OnInit {
           method: h.method ?? '',
           grade: h.grade ?? '',
           notes: h.notes ?? '',
-          addToStock: false,
+          stockMode: 'none',
+          stockWoolId: null,
         });
         this.woolId.set(h.woolId);
+        this.woolName.set(h.woolName);
         this.loaded.set(true);
       });
     });
@@ -212,7 +304,8 @@ export class HarvestForm implements OnInit {
   protected save(): void {
     const v = this.form.getRawValue();
     const sourceId = v.source === 'animal' ? v.animalId : v.locationId;
-    if (this.form.invalid || !sourceId) {
+    const toExisting = !this.woolId() && v.stockMode === 'existing';
+    if (this.form.invalid || !sourceId || (toExisting && !v.stockWoolId)) {
       this.form.markAllAsTouched();
       return;
     }
@@ -226,7 +319,8 @@ export class HarvestForm implements OnInit {
         method: emptyToNull(v.method),
         grade: emptyToNull(v.grade),
         notes: emptyToNull(v.notes),
-        addToStock: v.addToStock,
+        addToStock: !this.woolId() && v.stockMode !== 'none',
+        stockWoolId: toExisting ? v.stockWoolId : null,
       })
       .subscribe({
         next: () => this.router.navigate(['/productie']),
@@ -235,11 +329,23 @@ export class HarvestForm implements OnInit {
   }
 
   protected remove(): void {
-    this.confirm
-      .ask('Oogst verwijderen', 'Weet je zeker dat je deze oogst wilt verwijderen? Een eventuele voorraadpartij blijft bestaan.')
+    const weight = this.form.controls.weightGrams.value;
+    const choice$ = this.woolId()
+      ? this.confirm.choose(
+          'Oogst verwijderen',
+          `Deze oogst zit in de voorraadpartij "${this.woolName()}". Moet het gewicht (${weight} g) ook van die partij af?`,
+          [
+            { label: 'Alleen de oogst verwijderen', value: 'keep' as const },
+            { label: 'Ook van de voorraad afhalen', value: 'remove' as const },
+          ],
+        )
+      : this.confirm
+          .ask('Oogst verwijderen', 'Weet je zeker dat je deze oogst wilt verwijderen?')
+          .pipe(switchMap((ok) => (ok ? of('keep' as const) : of(null))));
+
+    choice$
       .pipe(
-        filter(Boolean),
-        switchMap(() => this.api.harvests.delete(+this.id()!)),
+        switchMap((choice) => (choice ? this.api.harvests.deleteHarvest(+this.id()!, choice === 'remove') : EMPTY)),
       )
       .subscribe(() => this.router.navigate(['/productie']));
   }

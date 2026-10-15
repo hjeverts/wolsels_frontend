@@ -124,6 +124,16 @@ const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', '
               <th mat-header-cell *matHeaderCellDef>Kwaliteit</th>
               <td mat-cell *matCellDef="let h" class="muted">{{ h.grade }}</td>
             </ng-container>
+            <ng-container matColumnDef="stock">
+              <th mat-header-cell *matHeaderCellDef>Voorraad</th>
+              <td mat-cell *matCellDef="let h">
+                @if (h.woolName) {
+                  <span class="inline"><mat-icon inline class="in-stock">inventory_2</mat-icon> {{ h.woolName }}</span>
+                } @else {
+                  <span class="muted">–</span>
+                }
+              </td>
+            </ng-container>
             <ng-container matColumnDef="weight">
               <th mat-header-cell *matHeaderCellDef class="num">Gewicht</th>
               <td mat-cell *matCellDef="let h" class="num">{{ h.weightGrams | grams }}</td>
@@ -143,6 +153,9 @@ const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', '
   styles: `
     .year {
       width: 140px;
+    }
+    .in-stock {
+      color: var(--mat-sys-primary);
     }
     .charts {
       display: grid;
@@ -185,7 +198,7 @@ export class ProductionOverview {
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);
 
-  protected readonly columns = ['date', 'source', 'method', 'grade', 'weight'];
+  protected readonly columns = ['date', 'source', 'method', 'stock', 'weight'];
   protected readonly years = Array.from({ length: 8 }, (_, i) => new Date().getFullYear() - i);
   protected readonly year = signal(new Date().getFullYear());
 

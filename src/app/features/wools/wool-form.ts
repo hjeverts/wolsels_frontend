@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -6,10 +7,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
-import { filter, map, switchMap } from 'rxjs';
+import { filter, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { Harvest, Wool } from '../../core/models';
 import { ColorSwatch } from '../../shared/color-swatch';
+import { GramsPipe } from '../../shared/grams.pipe';
 import { ConfirmService } from '../../shared/confirm.service';
 import { emptyToNull, toNumber } from '../../shared/form-utils';
 
@@ -25,7 +30,11 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
     MatInputModule,
     MatIconModule,
     MatAutocompleteModule,
+    MatSelectModule,
+    MatTableModule,
+    DatePipe,
     ColorSwatch,
+    GramsPipe,
   ],
   template: `
     <div class="page-header">
@@ -85,8 +94,72 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
         <button mat-flat-button type="submit" [disabled]="saving()">Opslaan</button>
       </div>
     </form>
+
+    @if (id()) {
+      @if (harvests().length) {
+        <h2 class="section-title extra"><mat-icon>agriculture</mat-icon> Opgebouwd uit oogsten</h2>
+        <div class="table-wrap">
+          <table mat-table [dataSource]="harvests()">
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>Datum</th>
+              <td mat-cell *matCellDef="let h">{{ h.date | date: 'd MMM y' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="source">
+              <th mat-header-cell *matHeaderCellDef>Dier / locatie</th>
+              <td mat-cell *matCellDef="let h">{{ h.animalName ?? h.locationName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="weight">
+              <th mat-header-cell *matHeaderCellDef class="num">Gewicht</th>
+              <td mat-cell *matCellDef="let h" class="num">{{ h.weightGrams | grams }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="harvestColumns"></tr>
+            <tr mat-row *matRowDef="let h; columns: harvestColumns" class="clickable" [routerLink]="['/productie', h.id]"></tr>
+          </table>
+        </div>
+        <p class="muted small">Samen {{ harvestTotal() | grams }} geoogst. De voorraad kan lager zijn als er al wol is gebruikt.</p>
+      }
+
+      @if (mergeCandidates().length) {
+        <h2 class="section-title extra"><mat-icon>call_merge</mat-icon> Samenvoegen</h2>
+        <p class="muted">
+          Voeg deze partij samen met een andere, bijvoorbeeld alle oogsten van één dier. Het gewicht gaat over naar de
+          gekozen partij, en oogsten en mengsels die naar deze partij verwijzen gaan mee. Deze partij verdwijnt daarna.
+        </p>
+        <div class="merge">
+          <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Samenvoegen met</mat-label>
+            <mat-select [value]="mergeTarget()" (selectionChange)="mergeTarget.set($event.value)">
+              @for (w of mergeCandidates(); track w.id) {
+                <mat-option [value]="w.id">
+                  <span class="inline"><app-color-swatch [color]="w.colorHex" /> {{ w.name }}
+                    <span class="muted">· {{ w.woolType }} · {{ w.weightGrams | grams }}</span></span>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button mat-stroked-button type="button" (click)="merge()" [disabled]="!mergeTarget()">
+            <mat-icon>call_merge</mat-icon> Samenvoegen
+          </button>
+        </div>
+      }
+    }
   `,
   styles: `
+    .extra {
+      margin-top: 32px;
+    }
+    .small {
+      font: var(--mat-sys-body-small);
+    }
+    .merge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      mat-form-field {
+        min-width: 300px;
+      }
+    }
     .color-pick {
       position: relative;
       display: inline-flex;
@@ -108,6 +181,12 @@ export class WoolForm implements OnInit {
 
   readonly id = input<string>();
   protected readonly saving = signal(false);
+  protected readonly harvests = signal<Harvest[]>([]);
+  protected readonly harvestColumns = ['date', 'source', 'weight'];
+  protected readonly harvestTotal = computed(() => this.harvests().reduce((sum, h) => sum + h.weightGrams, 0));
+  private readonly allWools = signal<Wool[]>([]);
+  protected readonly mergeCandidates = computed(() => this.allWools().filter((w) => String(w.id) !== this.id()));
+  protected readonly mergeTarget = signal<number | null>(null);
 
   protected readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
@@ -119,10 +198,7 @@ export class WoolForm implements OnInit {
     notes: [''],
   });
 
-  private readonly existingTypes = toSignal(
-    this.api.wools.list().pipe(map((wools) => [...new Set(wools.map((w) => w.woolType))])),
-    { initialValue: [] },
-  );
+  private readonly existingTypes = computed(() => [...new Set(this.allWools().map((w) => w.woolType))]);
   private readonly typeInput = toSignal(this.form.controls.woolType.valueChanges, { initialValue: '' });
   protected readonly woolTypes = computed(() => {
     const term = this.typeInput().toLowerCase();
@@ -132,8 +208,10 @@ export class WoolForm implements OnInit {
   });
 
   ngOnInit(): void {
+    this.api.wools.list().subscribe((wools) => this.allWools.set(wools));
     const id = this.id();
     if (!id) return;
+    this.api.harvests.list({ woolId: +id }).subscribe((h) => this.harvests.set(h));
     this.api.wools.get(+id).subscribe((wool) =>
       this.form.reset({
         name: wool.name,
@@ -168,6 +246,26 @@ export class WoolForm implements OnInit {
         next: () => this.router.navigate(['/voorraad']),
         error: () => this.saving.set(false),
       });
+  }
+
+  protected merge(): void {
+    const target = this.allWools().find((w) => w.id === this.mergeTarget());
+    if (!target) return;
+    const v = this.form.getRawValue();
+    const differs =
+      target.woolType.toLowerCase() !== v.woolType.trim().toLowerCase() || target.color.toLowerCase() !== v.color.trim().toLowerCase();
+    const warning = differs ? ` Let op: de wolsoort of kleur verschilt (${target.woolType}, ${target.color}).` : '';
+    this.confirm
+      .ask(
+        'Partijen samenvoegen',
+        `"${v.name}" (${v.weightGrams ?? 0} g) wordt toegevoegd aan "${target.name}" en verdwijnt daarna.${warning}`,
+        'Samenvoegen',
+      )
+      .pipe(
+        filter(Boolean),
+        switchMap(() => this.api.wools.merge(+this.id()!, target.id)),
+      )
+      .subscribe((merged) => this.router.navigate(['/voorraad', merged.id]));
   }
 
   protected remove(): void {
