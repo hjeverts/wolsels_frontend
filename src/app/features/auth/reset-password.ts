@@ -24,7 +24,7 @@ import { MIN_PASSWORD_LENGTH, passwordsMatch } from './register';
         } @else {
           <p class="muted">Voor {{ email() }}</p>
           <form [formGroup]="form" (ngSubmit)="submit()">
-            <mat-form-field>
+            <mat-form-field subscriptSizing="dynamic">
               <mat-label>Nieuw wachtwoord</mat-label>
               <input matInput type="password" formControlName="password" autocomplete="new-password" required />
               <mat-hint>Minimaal {{ minLength }} tekens.</mat-hint>

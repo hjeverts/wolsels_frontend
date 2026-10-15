@@ -34,7 +34,7 @@ export function passwordsMatch(group: AbstractControl): ValidationErrors | null 
               <mat-label>E-mailadres</mat-label>
               <input matInput type="email" formControlName="email" autocomplete="username" required />
             </mat-form-field>
-            <mat-form-field>
+            <mat-form-field subscriptSizing="dynamic">
               <mat-label>Wachtwoord</mat-label>
               <input matInput type="password" formControlName="password" autocomplete="new-password" required />
               <mat-hint>Minimaal {{ minLength }} tekens. Een zin van een paar woorden is sterk en makkelijk te onthouden.</mat-hint>
