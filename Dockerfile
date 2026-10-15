@@ -6,7 +6,8 @@ COPY . .
 RUN npx ng build --configuration production
 
 FROM nginx:1.29-alpine
-ENV API_UPSTREAM=http://backend:8080
+ENV API_UPSTREAM=http://backend:8080 \
+    NGINX_RESOLVER=127.0.0.11
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist/wolsels-frontend/browser /usr/share/nginx/html
 EXPOSE 80

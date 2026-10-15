@@ -42,4 +42,5 @@ docker build -t wolsels-frontend .
 docker run -p 8080:80 -e API_UPSTREAM=http://<backend-host>:8080 wolsels-frontend
 ```
 
-nginx serveert de app en stuurt `/api/` door naar `API_UPSTREAM`.
+nginx serveert de app en stuurt `/api/` door naar `API_UPSTREAM`. `NGINX_RESOLVER` (standaard Docker-DNS
+`127.0.0.11`) wordt gebruikt om die hostnaam op te zoeken; buiten Docker zet je hier je eigen DNS-server.
