@@ -40,18 +40,19 @@ andere gewichten worden direct herberekend (`src/app/core/blend-calculator.ts`).
 bij opslaan met dezelfde logica opnieuw. Het maximaal aantal soorten komt uit de backend
 (`/api/settings`). Er verschijnt een waarschuwing als er meer wol nodig is dan op voorraad.
 
-## Productie-build
-
-De app bestaat uit statische bestanden die door de nginx op de server worden geserveerd; die stuurt
-ook `/api/` door naar de backend. Configuratie en een deploy-script staan in
-[wolsels_deploy](https://github.com/hjeverts/wolsels_deploy) (`nginx/wolsels.conf`,
-`scripts/deploy-frontend.sh`).
-
-Bouwen zonder lokale Node-installatie:
+## Docker
 
 ```sh
-docker build --output type=local,dest=./out .
+docker build -t wolsels-frontend .
+docker run -p 8080:8080 -e API_UPSTREAM=http://<backend-host>:8080 wolsels-frontend
 ```
 
-De beveiligingsheaders (o.a. een strikte Content-Security-Policy) staan in de nginx-configuratie;
-daarom staat het inlinen van kritieke CSS uit in `angular.json` (dat zou een inline script vereisen).
+De container (nginx, niet-root, poort 8080) serveert de app en stuurt `/api/` door naar `API_UPSTREAM`.
+`NGINX_RESOLVER` (standaard Docker-DNS `127.0.0.11`) wordt gebruikt om die hostnaam op te zoeken.
+In productie staat hij achter de nginx op de server; zie
+[wolsels_deploy](https://github.com/hjeverts/wolsels_deploy).
+
+De nginx-configuratie (`nginx/default.conf.template`) zet beveiligingsheaders, waaronder een strikte
+Content-Security-Policy (daarom staat het inlinen van kritieke CSS uit in `angular.json`). Het client-IP
+wordt alleen van proxies op interne netwerken overgenomen, zodat de pogingslimieten van de backend niet
+te omzeilen zijn met een vervalste `X-Forwarded-For`.
