@@ -4,6 +4,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { HouseholdService } from './household.service';
 
 /**
  * Toont fouten van de API (ProblemDetails) als melding. Een verlopen sessie stuurt naar de inlogpagina.
@@ -13,9 +14,17 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const snackBar = inject(MatSnackBar);
   const router = inject(Router);
   const auth = inject(AuthService);
+  const households = inject(HouseholdService);
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (req.url.startsWith('/api/auth')) return throwError(() => error);
+      if (error.status === 403 && (error.error as { type?: string } | null)?.type === 'household-access') {
+        // Het bewaarde huishouden is niet (meer) van jou, bv. omdat je bent verwijderd.
+        households.forget();
+        snackBar.open('Je hebt geen toegang (meer) tot dat huishouden.', 'Sluiten', { duration: 6000 });
+        households.load().subscribe(() => router.navigate(['/voorraad']));
+        return throwError(() => error);
+      }
       if (error.status === 401) {
         if (auth.user()) snackBar.open('Je sessie is verlopen. Log opnieuw in.', 'Sluiten', { duration: 6000 });
         auth.user.set(null);

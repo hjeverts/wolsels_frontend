@@ -48,10 +48,24 @@ server {
         proxy_read_timeout 60s;
     }
 
-    # Bestandsnamen bevatten een hash; ze mogen lang gecachet worden.
-    location ~* \.(?:js|css|woff2?|ico|svg|png|webp)$ {
+    # JS- en CSS-bestandsnamen bevatten een hash; ze mogen lang gecachet worden.
+    location ~* \.(?:js|css|woff2?)$ {
         expires 1y;
         access_log off;
+        try_files $uri =404;
+    }
+
+    # Iconen en manifest hebben vaste namen: korter cachen, zodat een nieuw icoon wel aankomt.
+    location ~* \.(?:ico|svg|png|webp)$ {
+        expires 7d;
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # Web-app-manifest (installeren op tablet/telefoon) met het juiste MIME-type.
+    location = /manifest.webmanifest {
+        default_type application/manifest+json;
+        expires 7d;
         try_files $uri =404;
     }
 

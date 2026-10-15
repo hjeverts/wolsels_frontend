@@ -131,3 +131,53 @@ export interface ProductionSummary {
   perMonth: { year: number; month: number; totalGrams: number; harvestCount: number }[];
   perSource: { kind: 'animal' | 'location'; id: number; name: string; totalGrams: number; harvestCount: number }[];
 }
+
+export interface HouseholdSummary {
+  id: number;
+  name: string;
+  memberCount: number;
+}
+
+export interface HouseholdMember {
+  userId: string;
+  email: string;
+  isYou: boolean;
+  joinedAt: string;
+}
+
+export interface HouseholdInvite {
+  id: number;
+  createdBy: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface Household {
+  id: number;
+  name: string;
+  members: HouseholdMember[];
+  invites: HouseholdInvite[];
+}
+
+export interface CreatedInvite {
+  id: number;
+  token: string;
+  expiresAt: string;
+}
+
+export interface InviteInfo {
+  householdName: string;
+  invitedBy: string;
+  expiresAt: string;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  isYou: boolean;
+  isAdmin: boolean;
+  twoFactorEnabled: boolean;
+  blocked: boolean;
+  lockedOutUntil: string | null;
+  households: string[];
+}

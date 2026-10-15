@@ -1,8 +1,20 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/admin.guard';
 import { authGuard, guestGuard } from './core/auth.guard';
 
 const appRoutes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'voorraad' },
+  {
+    path: 'huishouden',
+    title: 'Huishouden · Wolsels',
+    loadComponent: () => import('./features/household/household-page').then((m) => m.HouseholdPage),
+  },
+  {
+    path: 'beheer',
+    title: 'Gebruikersbeheer · Wolsels',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./features/admin/admin-users').then((m) => m.AdminUsers),
+  },
   {
     path: 'account',
     title: 'Account · Wolsels',
@@ -99,6 +111,12 @@ export const routes: Routes = [
     path: 'wachtwoord-herstellen',
     title: 'Nieuw wachtwoord · Wolsels',
     loadComponent: () => import('./features/auth/reset-password').then((m) => m.ResetPassword),
+  },
+  {
+    // Bereikbaar met en zonder login.
+    path: 'uitnodiging/:token',
+    title: 'Uitnodiging · Wolsels',
+    loadComponent: () => import('./features/household/invite-page').then((m) => m.InvitePage),
   },
   { path: '', canActivate: [authGuard], children: appRoutes },
   { path: '**', redirectTo: '' },

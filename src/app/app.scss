@@ -16,8 +16,29 @@
   flex: 1;
 }
 
-.user {
+.user,
+.household {
   --mat-button-text-label-text-color: var(--mat-sys-on-primary);
+}
+
+.household {
+  margin-left: 16px;
+  max-width: 40vw;
+
+  .household-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .caret {
+    margin: 0;
+  }
+}
+
+.members {
+  color: var(--mat-sys-on-surface-variant);
+  margin-left: 4px;
 }
 
 .nav {
@@ -36,6 +57,7 @@
 
 @media (max-width: 640px) {
   .user-email,
+  .household-name,
   .nav-label {
     display: none;
   }

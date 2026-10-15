@@ -27,6 +27,9 @@ npm run build
 | `/dieren`     | Dieren (bv. angorakonijnen) met locatie en totale opbrengst               |
 | `/locaties`   | Locaties; oogsten kunnen ook direct op een locatie geboekt worden         |
 | `/account`    | Tweestapsverificatie (QR-code, herstelcodes) en wachtwoord wijzigen       |
+| `/huishouden` | Leden, uitnodigingslinks, naam, verlaten, extra huishouden aanmaken       |
+| `/uitnodiging/:token` | Uitnodiging accepteren (met of zonder account)                   |
+| `/beheer`     | Gebruikersbeheer (alleen beheerders)                                      |
 | `/inloggen`, `/registreren`, `/wachtwoord-vergeten`, `/wachtwoord-herstellen` | Accounts |
 
 Alle pagina's behalve de account-pagina's vereisen een login (`authGuard`). Een verlopen sessie
@@ -39,6 +42,18 @@ dat je als laatste invult (het totaal óf één van de soorten) is leidend en kr
 andere gewichten worden direct herberekend (`src/app/core/blend-calculator.ts`). De backend rekent
 bij opslaan met dezelfde logica opnieuw. Het maximaal aantal soorten komt uit de backend
 (`/api/settings`). Er verschijnt een waarschuwing als er meer wol nodig is dan op voorraad.
+
+### Huishoudens
+
+Het actieve huishouden staat in `localStorage` en wordt met elk API-verzoek meegestuurd als
+`X-Household` (`core/household.interceptor.ts`); de backend controleert het lidmaatschap. Wisselen
+herlaadt de app, zodat er nooit gegevens van een ander huishouden in beeld blijven.
+
+### Iconen
+
+Favicon, app-iconen (192/512, maskable) en het Apple touch icon komen uit `icons-src/` (het "gesture"-
+symbool uit het logo, op de themakleur). Opnieuw genereren: `./icons-src/generate.sh`. Met
+`public/manifest.webmanifest` is Wolsels op tablets en telefoons als app te installeren.
 
 ## Docker
 

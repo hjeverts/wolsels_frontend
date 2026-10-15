@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { AuthError, AuthService } from '../../core/auth.service';
+import { HouseholdService } from '../../core/household.service';
 
 export const MIN_PASSWORD_LENGTH = 10;
 
@@ -24,11 +25,15 @@ export function passwordsMatch(group: AbstractControl): ValidationErrors | null 
     <mat-card appearance="outlined" class="card">
       <mat-card-content>
         <h1>Account aanmaken</h1>
-        @if (allowed() === false) {
+        @if (allowed() === false && !uitnodiging()) {
           <p class="muted">Registreren is uitgeschakeld. Vraag de beheerder om een account.</p>
           <div class="links"><a routerLink="/inloggen">Naar inloggen</a></div>
         } @else {
-          <p class="muted">Je gegevens zijn alleen voor jou zichtbaar.</p>
+          @if (uitnodiging()) {
+            <p class="muted">Na het aanmaken word je meteen lid van het huishouden waarvoor je bent uitgenodigd.</p>
+          } @else {
+            <p class="muted">Je gegevens zijn alleen zichtbaar voor jou en wie je zelf uitnodigt.</p>
+          }
           <form [formGroup]="form" (ngSubmit)="submit()">
             <mat-form-field>
               <mat-label>E-mailadres</mat-label>
@@ -60,8 +65,12 @@ export function passwordsMatch(group: AbstractControl): ValidationErrors | null 
 })
 export class Register {
   private readonly auth = inject(AuthService);
+  private readonly households = inject(HouseholdService);
   private readonly router = inject(Router);
   private readonly fb = inject(NonNullableFormBuilder);
+
+  /** Token uit een uitnodigingslink (?uitnodiging=...). */
+  readonly uitnodiging = input<string>();
 
   protected readonly minLength = MIN_PASSWORD_LENGTH;
   protected readonly busy = signal(false);
@@ -92,11 +101,16 @@ export class Register {
     const { email, password } = this.form.getRawValue();
     this.busy.set(true);
     this.error.set(null);
+    const invite = this.uitnodiging();
     this.auth
-      .register(email, password)
-      .pipe(switchMap(() => this.auth.login(email, password)))
+      .register(email, password, invite)
+      .pipe(
+        switchMap(() => this.auth.login(email, password)),
+        switchMap(() => (invite ? this.households.join(invite) : of(null))),
+      )
       .subscribe({
-        next: () => this.router.navigateByUrl('/account?welkom=1'),
+        next: (householdId) =>
+          householdId ? this.households.switchTo(householdId, '/account?welkom=1') : this.router.navigateByUrl('/account?welkom=1'),
         error: (e: unknown) => {
           this.busy.set(false);
           this.error.set(e instanceof AuthError ? e.message : 'Er ging iets mis.');

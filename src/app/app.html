@@ -1,5 +1,28 @@
 <mat-toolbar class="toolbar">
   <a class="brand" routerLink="/"><mat-icon>gesture</mat-icon> Wolsels</a>
+  @if (auth.user() && households.active(); as active) {
+    <button mat-button class="household" [matMenuTriggerFor]="householdMenu" aria-label="Huishouden kiezen">
+      <mat-icon>home</mat-icon>
+      <span class="household-name">{{ active.name }}</span>
+      <mat-icon class="caret">arrow_drop_down</mat-icon>
+    </button>
+    <mat-menu #householdMenu="matMenu">
+      @for (h of households.households(); track h.id) {
+        <button mat-menu-item (click)="switchHousehold(h.id)">
+          <mat-icon>{{ h.id === households.activeId() ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
+          <span>{{ h.name }}</span>
+          @if (h.memberCount > 1) {
+            <span class="members">· {{ h.memberCount }} leden</span>
+          }
+        </button>
+      }
+      <mat-divider />
+      <a mat-menu-item routerLink="/huishouden">
+        <mat-icon>group_add</mat-icon>
+        <span>Huishouden beheren en uitnodigen</span>
+      </a>
+    </mat-menu>
+  }
   <span class="spacer"></span>
   @if (auth.user(); as user) {
     <button mat-button class="user" [matMenuTriggerFor]="userMenu" aria-label="Accountmenu">
@@ -11,6 +34,16 @@
         <mat-icon>manage_accounts</mat-icon>
         <span>Account en 2FA</span>
       </a>
+      <a mat-menu-item routerLink="/huishouden">
+        <mat-icon>home</mat-icon>
+        <span>Huishouden</span>
+      </a>
+      @if (user.isAdmin) {
+        <a mat-menu-item routerLink="/beheer">
+          <mat-icon>admin_panel_settings</mat-icon>
+          <span>Gebruikersbeheer</span>
+        </a>
+      }
       <mat-divider />
       <button mat-menu-item (click)="logout()">
         <mat-icon>logout</mat-icon>

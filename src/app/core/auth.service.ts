@@ -6,6 +6,7 @@ export interface Me {
   email: string;
   twoFactorEnabled: boolean;
   recoveryCodesLeft: number;
+  isAdmin: boolean;
 }
 
 export interface TwoFactorState {
@@ -72,8 +73,9 @@ export class AuthService {
       );
   }
 
-  register(email: string, password: string): Observable<void> {
-    return this.http.post<void>('/api/auth/register', { email, password }).pipe(
+  register(email: string, password: string, invite?: string): Observable<void> {
+    const url = invite ? `/api/auth/register?invite=${encodeURIComponent(invite)}` : '/api/auth/register';
+    return this.http.post<void>(url, { email, password }).pipe(
       catchError((error: HttpErrorResponse) => throwError(() => new AuthError(problemMessage(error)))),
     );
   }
@@ -118,7 +120,8 @@ export class AuthService {
 function loginMessage(status: number, detail: string | undefined, withTwoFactor: boolean): string {
   if (status === 429) return 'Te veel pogingen. Wacht een minuut en probeer het opnieuw.';
   if (status === 0) return 'De server is niet bereikbaar.';
-  if (detail === 'LockedOut') return 'Te veel mislukte pogingen. Je account is 5 minuten geblokkeerd.';
+  if (detail === 'LockedOut')
+    return 'Je account is geblokkeerd, na te veel mislukte pogingen of door een beheerder. Probeer het later opnieuw.';
   if (withTwoFactor) return 'De code klopt niet.';
   return 'Onjuist e-mailadres of wachtwoord.';
 }
