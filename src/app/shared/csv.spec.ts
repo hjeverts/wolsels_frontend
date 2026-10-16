@@ -1,4 +1,4 @@
-import { parseCsv, readTextFile, toCsv, unescapeFormula } from './csv';
+import { CsvError, parseCsv, readTextFile, toCsv, unescapeFormula } from './csv';
 
 describe('parseCsv', () => {
   it('herkent puntkomma, komma en tab als scheidingsteken', () => {
@@ -12,6 +12,18 @@ describe('parseCsv', () => {
       ['Naam', 'Notities'],
       ['Flappie', 'Lief; "zacht"\nen wit'],
     ]);
+  });
+
+  it('telt bij het bepalen van het scheidingsteken alleen tekens buiten aanhalingstekens', () => {
+    expect(parseCsv('Naam,"Notities; extra"\r\nBol,tekst')).toEqual([['Naam', 'Notities; extra'], ['Bol', 'tekst']]);
+    expect(parseCsv('"a,b";c;d\n1;2;3')).toEqual([['a,b', 'c', 'd'], ['1', '2', '3']]);
+    expect(parseCsv('"Naam\nvan dier",Kleur\nBol,wit')).toEqual([['Naam\nvan dier', 'Kleur'], ['Bol', 'wit']]);
+    expect(parseCsv('Naam\nBol')).toEqual([['Naam'], ['Bol']]);
+  });
+
+  it('weigert een veld met een aanhalingsteken dat niet wordt afgesloten', () => {
+    expect(() => parseCsv('Naam,Notities\nBol,"lief\nPluis,zacht')).toThrow(CsvError);
+    expect(() => parseCsv('Naam,Notities\r\nBol,"lief\r\nPluis,zacht')).toThrow('Op regel 2 ');
   });
 
   it('negeert een BOM en houdt lege velden', () => {
@@ -31,6 +43,11 @@ describe('toCsv', () => {
     expect(csv).toBe(`"'=HYPERLINK(""x"")",'-3,'@a\r\n`);
     expect(parseCsv(csv)[0].map(unescapeFormula)).toEqual(['=HYPERLINK("x")', '-3', '@a']);
     expect(unescapeFormula("'gewoon")).toBe("'gewoon");
+  });
+
+  it('houdt waarden die al met een apostrof beginnen gelijk', () => {
+    const values = ["'-Bol", "''=x", "'gewoon", '-Bol'];
+    expect(parseCsv(toCsv([values]))[0].map(unescapeFormula)).toEqual(values);
   });
 
   it('kan teruggelezen worden', () => {

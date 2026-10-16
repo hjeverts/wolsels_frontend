@@ -5,10 +5,20 @@
 
 export const CSV_DELIMITER = ',';
 
-/** Tekens waarmee Excel een cel als formule ziet; zo'n cel krijgt bij exporteren een ' ervoor. */
-const FORMULA_START = /^[=+\-@\t\r]/;
+/**
+ * Waarden die Excel als formule ziet krijgen bij exporteren een ' ervoor. Ook als er al apostrofs voor
+ * staan (bv. '-Bol), zodat de import er precies één weghaalt en de waarde gelijk blijft.
+ */
+const FORMULA_LIKE = /^'*[=+\-@\t\r]/;
+const ESCAPED_FORMULA = /^'+[=+\-@\t\r]/;
 
-/** Leest CSV-tekst in rijen; het scheidingsteken (; , of tab) wordt uit de eerste regel bepaald. */
+/** Ongeldige CSV, bv. een veld tussen aanhalingstekens dat niet wordt afgesloten. */
+export class CsvError extends Error {}
+
+/**
+ * Leest CSV-tekst in rijen; het scheidingsteken (, ; of tab) wordt uit de kopregel bepaald.
+ * Geeft een {@link CsvError} bij een veld tussen aanhalingstekens dat niet wordt afgesloten.
+ */
 export function parseCsv(text: string): string[][] {
   text = text.replace(/^﻿/, '');
   const delimiter = detectDelimiter(text);
@@ -16,9 +26,12 @@ export function parseCsv(text: string): string[][] {
   let row: string[] = [];
   let field = '';
   let quoted = false;
+  let line = 1;
+  let quoteLine = 0;
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
+    if (c === '\n') line++;
     if (quoted) {
       if (c === '"' && text[i + 1] === '"') {
         field += '"';
@@ -30,11 +43,17 @@ export function parseCsv(text: string): string[][] {
       }
     } else if (c === '"' && field === '') {
       quoted = true;
+      quoteLine = line;
     } else if (c === delimiter) {
       row.push(field);
       field = '';
     } else if (c === '\n' || c === '\r') {
-      if (c === '\r' && text[i + 1] === '\n') i++;
+      if (c === '\r' && text[i + 1] === '\n') {
+        i++;
+        line++;
+      } else if (c === '\r') {
+        line++;
+      }
       row.push(field);
       rows.push(row);
       row = [];
@@ -43,6 +62,9 @@ export function parseCsv(text: string): string[][] {
       field += c;
     }
   }
+  if (quoted) {
+    throw new CsvError(`Op regel ${quoteLine} begint een veld met een aanhalingsteken (") dat niet wordt afgesloten.`);
+  }
   if (field !== '' || row.length) {
     row.push(field);
     rows.push(row);
@@ -50,10 +72,16 @@ export function parseCsv(text: string): string[][] {
   return rows;
 }
 
+/** Telt de kandidaten in de kopregel, buiten aanhalingstekens; bij gelijkspel wint de komma. */
 function detectDelimiter(text: string): string {
-  const firstLine = text.slice(0, text.search(/\r|\n|$/));
-  const candidates = [';', ',', '\t'];
-  const counts = candidates.map((d) => firstLine.split(d).length);
+  const candidates = [',', ';', '\t'];
+  const counts = candidates.map(() => 0);
+  let quoted = false;
+  for (const c of text) {
+    if (c === '"') quoted = !quoted;
+    else if (!quoted && (c === '\n' || c === '\r')) break;
+    else if (!quoted && candidates.includes(c)) counts[candidates.indexOf(c)]++;
+  }
   return candidates[counts.indexOf(Math.max(...counts))];
 }
 
@@ -64,13 +92,13 @@ export function toCsv(rows: readonly (readonly (string | null | undefined)[])[])
 
 function formatField(value: string | null | undefined): string {
   let v = value ?? '';
-  if (FORMULA_START.test(v)) v = `'${v}`;
+  if (FORMULA_LIKE.test(v)) v = `'${v}`;
   return /[";\r\n,]/.test(v) || v !== v.trim() ? `"${v.replace(/"/g, '""')}"` : v;
 }
 
 /** Haalt de ' weg die {@link toCsv} voor formule-achtige waarden zet. */
 export function unescapeFormula(value: string): string {
-  return value.startsWith("'") && FORMULA_START.test(value.slice(1)) ? value.slice(1) : value;
+  return ESCAPED_FORMULA.test(value) ? value.slice(1) : value;
 }
 
 /**

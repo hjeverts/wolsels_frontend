@@ -1,6 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,8 +10,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
-import { AnimalImportResult } from '../../core/models';
-import { downloadCsv, parseCsv, readTextFile } from '../../shared/csv';
+import { Animal, AnimalImportResult } from '../../core/models';
+import { CsvError, downloadCsv, parseCsv, readTextFile } from '../../shared/csv';
 import {
   ANIMAL_CSV_FIELDS,
   AnimalCsvField,
@@ -113,75 +112,83 @@ interface PreviewRow extends ImportRow {
       </p>
 
       <h2 class="section-title">Controleren</h2>
-      <div class="stat-row">
-        <div class="stat">
-          <div class="label">Nieuw</div>
-          <div class="value">{{ counts().new }}</div>
+      @if (animalsLoaded()) {
+        <div class="stat-row">
+          <div class="stat">
+            <div class="label">Nieuw</div>
+            <div class="value">{{ counts().new }}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Bijwerken</div>
+            <div class="value">{{ counts().update }}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Overslaan</div>
+            <div class="value">{{ counts().skip }}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Met fouten</div>
+            <div class="value" [class.error]="counts().error">{{ counts().error }}</div>
+          </div>
         </div>
-        <div class="stat">
-          <div class="label">Bijwerken</div>
-          <div class="value">{{ counts().update }}</div>
-        </div>
-        <div class="stat">
-          <div class="label">Overslaan</div>
-          <div class="value">{{ counts().skip }}</div>
-        </div>
-        <div class="stat">
-          <div class="label">Met fouten</div>
-          <div class="value" [class.error]="counts().error">{{ counts().error }}</div>
-        </div>
-      </div>
 
-      @if (tooMany()) {
-        <p class="error">Het bestand bevat meer dan {{ maxRows }} dieren. Splits het op in kleinere bestanden.</p>
-      }
-      @if (errors().length) {
-        <ul class="errors">
-          @for (e of errors().slice(0, 20); track $index) {
-            <li>{{ e }}</li>
-          }
-          @if (errors().length > 20) {
-            <li>… en nog {{ errors().length - 20 }} fouten</li>
-          }
-        </ul>
-      }
-
-      @if (preview().length) {
-        <div class="table-wrap">
-          <table mat-table [dataSource]="preview()">
-            <ng-container matColumnDef="line">
-              <th mat-header-cell *matHeaderCellDef class="num">Regel</th>
-              <td mat-cell *matCellDef="let r" class="num muted">{{ r.line }}</td>
-            </ng-container>
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Naam</th>
-              <td mat-cell *matCellDef="let r">{{ r.row.name }}</td>
-            </ng-container>
-            <ng-container matColumnDef="species">
-              <th mat-header-cell *matHeaderCellDef>Soort / ras</th>
-              <td mat-cell *matCellDef="let r">{{ r.row.species || defaultSpecies() }}{{ r.row.breed ? ' · ' + r.row.breed : '' }}</td>
-            </ng-container>
-            <ng-container matColumnDef="location">
-              <th mat-header-cell *matHeaderCellDef>Locatie</th>
-              <td mat-cell *matCellDef="let r" class="muted">{{ r.row.location }}</td>
-            </ng-container>
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef>Wordt</th>
-              <td mat-cell *matCellDef="let r" [class.error]="r.status === 'error'" [class.muted]="r.status === 'skip'">
-                {{ statusLabel(r) }}
-              </td>
-            </ng-container>
-            <tr mat-header-row *matHeaderRowDef="columns"></tr>
-            <tr mat-row *matRowDef="let r; columns: columns"></tr>
-          </table>
-        </div>
-        @if (rows().length > preview().length) {
-          <p class="muted">De eerste {{ preview().length }} van {{ rows().length }} regels.</p>
+        @if (tooMany()) {
+          <p class="error">Het bestand bevat meer dan {{ maxRows }} dieren. Splits het op in kleinere bestanden.</p>
         }
+        @if (errors().length) {
+          <ul class="errors">
+            @for (e of errors().slice(0, 20); track $index) {
+              <li>{{ e }}</li>
+            }
+            @if (errors().length > 20) {
+              <li>… en nog {{ errors().length - 20 }} fouten</li>
+            }
+          </ul>
+        }
+
+        @if (preview().length) {
+          <div class="table-wrap">
+            <table mat-table [dataSource]="preview()">
+              <ng-container matColumnDef="line">
+                <th mat-header-cell *matHeaderCellDef class="num">Regel</th>
+                <td mat-cell *matCellDef="let r" class="num muted">{{ r.line }}</td>
+              </ng-container>
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Naam</th>
+                <td mat-cell *matCellDef="let r">{{ r.row.name }}</td>
+              </ng-container>
+              <ng-container matColumnDef="species">
+                <th mat-header-cell *matHeaderCellDef>Soort / ras</th>
+                <td mat-cell *matCellDef="let r">{{ r.row.species || defaultSpecies() }}{{ r.row.breed ? ' · ' + r.row.breed : '' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="location">
+                <th mat-header-cell *matHeaderCellDef>Locatie</th>
+                <td mat-cell *matCellDef="let r" class="muted">{{ r.row.location }}</td>
+              </ng-container>
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Wordt</th>
+                <td mat-cell *matCellDef="let r" [class.error]="r.status === 'error'" [class.muted]="r.status === 'skip'">
+                  {{ statusLabel(r) }}
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="columns"></tr>
+              <tr mat-row *matRowDef="let r; columns: columns"></tr>
+            </table>
+          </div>
+          @if (rows().length > preview().length) {
+            <p class="muted">De eerste {{ preview().length }} van {{ rows().length }} regels.</p>
+          }
+        }
+      } @else if (!animalsFailed()) {
+        <p class="muted">Bestaande dieren laden…</p>
       }
     }
 
     <div class="form-actions">
+      @if (animalsFailed()) {
+        <span class="error">Je dieren konden niet geladen worden.</span>
+        <button mat-button type="button" (click)="loadAnimals()">Opnieuw proberen</button>
+      }
       <span class="spacer"></span>
       <a mat-button routerLink="/dieren">Annuleren</a>
       <button mat-flat-button type="button" [disabled]="!canImport() || saving()" (click)="import()">
@@ -225,7 +232,9 @@ export class AnimalImport {
   protected readonly maxRows = MAX_ROWS;
   protected readonly columns = ['line', 'name', 'species', 'location', 'status'];
 
-  private readonly animals = toSignal(this.api.animals.list(), { initialValue: [] });
+  /** Bestaande dieren; null zolang ze niet geladen zijn (dan kan nog niet bepaald worden wat nieuw is). */
+  private readonly animals = signal<Animal[] | null>(null);
+  protected readonly animalsFailed = signal(false);
   private readonly table = signal<string[][]>([]);
   protected readonly fileName = signal<string | null>(null);
   protected readonly fileError = signal<string | null>(null);
@@ -244,7 +253,7 @@ export class AnimalImport {
   protected readonly rows = computed<PreviewRow[]>(() => {
     const rows = buildImportRows(this.table(), this.mapping());
     const existing = new Map<string, number>();
-    for (const a of this.animals()) existing.set(key(a.name), (existing.get(key(a.name)) ?? 0) + 1);
+    for (const a of this.animals() ?? []) existing.set(key(a.name), (existing.get(key(a.name)) ?? 0) + 1);
     const inFile = new Map<string, number>();
     for (const r of rows) inFile.set(key(r.row.name), (inFile.get(key(r.row.name)) ?? 0) + 1);
 
@@ -273,23 +282,52 @@ export class AnimalImport {
     // Zonder naamkolom heeft elke regel die fout; dat staat al bij het veld Naam.
     ...(this.mapping().name === null ? [] : this.rows().flatMap((r) => r.errors.map((e) => `Regel ${r.line}: ${e}`))),
   ]);
+  protected readonly animalsLoaded = computed(() => this.animals() !== null);
   protected readonly tooMany = computed(() => this.rows().length > MAX_ROWS);
   protected readonly toImport = computed(() => this.counts().new + this.counts().update);
   protected readonly canImport = computed(
-    () => this.mapping().name !== null && this.toImport() > 0 && !this.counts().error && !this.tooMany(),
+    () =>
+      this.animals() !== null &&
+      this.mapping().name !== null &&
+      this.toImport() > 0 &&
+      !this.counts().error &&
+      !this.tooMany(),
   );
+
+  constructor() {
+    this.loadAnimals();
+  }
+
+  protected loadAnimals(): void {
+    this.animalsFailed.set(false);
+    this.api.animals.list().subscribe({
+      next: (animals) => this.animals.set(animals),
+      error: () => this.animalsFailed.set(true),
+    });
+  }
 
   protected async choose(input: HTMLInputElement): Promise<void> {
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
+    // Eerst het vorige bestand vergeten, zodat dat na een mislukte keuze niet meer te importeren is.
+    this.fileName.set(null);
+    this.table.set([]);
+    this.mapping.set(autoMap([]));
     this.fileError.set(null);
     this.serverErrors.set([]);
     if (file.size > MAX_FILE_BYTES) {
       this.fileError.set('Dit bestand is te groot (maximaal 5 MB).');
       return;
     }
-    const table = parseCsv(await readTextFile(file));
+    let table: string[][];
+    try {
+      table = parseCsv(await readTextFile(file));
+    } catch (e) {
+      if (!(e instanceof CsvError)) throw e;
+      this.fileError.set(`Dit bestand kan niet gelezen worden. ${e.message}`);
+      return;
+    }
     if (table.length < 2) {
       this.fileError.set('Dit bestand bevat geen gegevens onder de kolomkoppen.');
       return;
