@@ -13,7 +13,7 @@ import { TranslatePipe, currentLocale } from '../../core/i18n/i18n';
 import { Harvest } from '../../core/models';
 import { GramsPipe } from '../../shared/grams.pipe';
 
-/** Korte maandnamen in de taal van de app. */
+/** Short month names in the app language. */
 const monthName = (month: number, year?: number) =>
   new Intl.DateTimeFormat(currentLocale(), year ? { month: 'short', year: 'numeric' } : { month: 'short' }).format(
     new Date(year ?? 2000, month - 1, 1),

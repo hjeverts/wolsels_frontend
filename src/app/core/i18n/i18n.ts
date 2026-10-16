@@ -4,13 +4,13 @@ import { LANGUAGES, Language, isLanguage, matchLanguage } from './languages';
 import type nl from './translations/nl';
 
 /**
- * Vertalingen. De taal ligt vast zolang de app draait: hij wordt vóór het opstarten geladen (zie main.ts) en
- * bij een andere keuze wordt de app opnieuw geladen. Zo kloppen ook datums en getallen (LOCALE_ID) meteen.
+ * Translations. The language is fixed while the app runs: it is loaded before bootstrapping (see main.ts) and
+ * when another one is chosen the app reloads. That way dates and numbers (LOCALE_ID) are right immediately too.
  *
- * De Nederlandse vertaling is de bron: elke andere taal moet dezelfde sleutels hebben (zie {@link Translations}).
+ * The Dutch translation is the source: every other language must have the same keys (see {@link Translations}).
  */
 
-/** Meervoudsvormen volgens Intl.PluralRules; 'zero' wordt gebruikt bij precies 0, als die er is. */
+/** Plural forms according to Intl.PluralRules; 'zero' is used for exactly 0, if present. */
 export interface PluralForms {
   zero?: string;
   one?: string;
@@ -22,14 +22,14 @@ export interface PluralForms {
 
 export type TranslationKey = keyof typeof nl;
 
-/** Een vertaling: dezelfde sleutels als het Nederlands, met meervoudsvormen waar het Nederlands die heeft. */
+/** A translation: the same keys as the Dutch one, with plural forms where the Dutch one has them. */
 export type Translations = { [K in TranslationKey]: (typeof nl)[K] extends string ? string : PluralForms };
 
 export type TranslationParams = Record<string, string | number | null | undefined>;
 
 const STORAGE_KEY = 'wolsels.language';
 
-/** Taal als de browser geen van onze talen noemt. */
+/** Language when the browser lists none of ours. */
 const FALLBACK_LANGUAGE: Language = 'en';
 
 type Loaded = [{ default: Translations }, { default: unknown }];
@@ -52,7 +52,7 @@ let language: Language = FALLBACK_LANGUAGE;
 let messages: Partial<Translations> = {};
 let pluralRules = new Intl.PluralRules(localeOf(language));
 
-/** Laadt de taal van deze browser (gekozen taal, anders die van de browser); vóór het opstarten aanroepen. */
+/** Loads the language for this browser (the chosen language, otherwise the browser's); call before bootstrapping. */
 export async function initI18n(): Promise<void> {
   const chosen = readStored() ?? matchLanguage(navigator.languages ?? [navigator.language]) ?? FALLBACK_LANGUAGE;
   const [translations, localeData] = await LOADERS[chosen]();
@@ -60,7 +60,7 @@ export async function initI18n(): Promise<void> {
   useTranslations(chosen, translations.default);
 }
 
-/** Zet de vertalingen direct (bij het opstarten, en in tests). */
+/** Sets the translations directly (at startup, and in tests). */
 export function useTranslations(lang: Language, translations: Partial<Translations>): void {
   language = lang;
   messages = translations;
@@ -72,28 +72,28 @@ export function currentLanguage(): Language {
   return language;
 }
 
-/** Locale voor datums en getallen, bv. 'de-DE'. */
+/** Locale for dates and numbers, e.g. 'de-DE'. */
 export function currentLocale(): string {
   return localeOf(language);
 }
 
 /**
- * Onthoudt de taal in deze browser en laadt de app opnieuw als die verandert. Zonder werkende opslag
- * (sommige privévensters) wordt niet herladen: de app zou na het laden weer in de oude taal starten en
- * via het profiel opnieuw willen wisselen, eindeloos.
+ * Remembers the language in this browser and reloads the app if it changes. Without working storage
+ * (some private windows) it does not reload: the app would start in the old language again after loading and
+ * want to switch again via the profile, endlessly.
  */
 export function switchLanguage(lang: Language): void {
   try {
     localStorage.setItem(STORAGE_KEY, lang);
   } catch {
-    // Opslag niet beschikbaar; readStored() hieronder ziet dat.
+    // Storage not available; readStored() below notices that.
   }
   if (lang !== language && readStored() === lang) window.location.reload();
 }
 
 /**
- * De vertaling van een sleutel, met {naam} vervangen door de parameters. Bij meervoudsvormen bepaalt de
- * parameter 'count' de vorm.
+ * The translation of a key, with {name} replaced by the parameters. For plural forms the parameter
+ * 'count' determines the form.
  */
 export function t(key: TranslationKey, params?: TranslationParams): string {
   const entry = messages[key];
@@ -109,7 +109,7 @@ export function t(key: TranslationKey, params?: TranslationParams): string {
   return text.replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name] ?? '') : match));
 }
 
-/** Vertaalt in een template: {{ 'nav.stock' | t }} of {{ 'wool.count' | t: { count: n } }}. */
+/** Translates in a template: {{ 'nav.stock' | t }} or {{ 'wool.count' | t: { count: n } }}. */
 @Pipe({ name: 't' })
 export class TranslatePipe implements PipeTransform {
   transform(key: TranslationKey, params?: TranslationParams): string {

@@ -53,12 +53,12 @@ class WoolResource extends Resource<Wool, WoolRequest> {
     super(http, url);
   }
 
-  /** Voegt een partij samen met een andere; geeft de overgebleven partij terug. */
+  /** Merges a lot into another one; returns the remaining lot. */
   merge(id: number, targetWoolId: number): Observable<Wool> {
     return this.http.post<Wool>(`${this.url}/${id}/merge`, { targetWoolId });
   }
 
-  /** Uploadt een (al verkleinde) foto met miniatuur; geeft het id van de foto terug. */
+  /** Uploads an (already resized) photo with thumbnail; returns the id of the photo. */
   uploadPhoto(woolId: number, photo: Blob, thumbnail: Blob): Observable<number> {
     const form = new FormData();
     form.append('photo', photo, 'foto.jpg');
@@ -71,8 +71,8 @@ class WoolResource extends Resource<Wool, WoolRequest> {
   }
 
   /**
-   * URL voor een &lt;img&gt;. Een afbeelding kan geen X-Household-header meesturen, daarom staat het huishouden
-   * in de URL (de server controleert het lidmaatschap op dezelfde manier).
+   * URL for an &lt;img&gt;. An image cannot send an X-Household header, so the household is
+   * in the URL (the server checks membership the same way).
    */
   photoUrl(woolId: number, photoId: number, thumbnail = false): string {
     const params = new URLSearchParams();
@@ -85,7 +85,7 @@ class WoolResource extends Resource<Wool, WoolRequest> {
 }
 
 class AnimalResource extends Resource<Animal, AnimalRequest> {
-  /** Importeert dieren in één keer; bij een fout wordt niets opgeslagen. */
+  /** Imports animals in one go; on an error nothing is saved. */
   import(request: AnimalImportRequest): Observable<AnimalImportResult> {
     return this.http.post<AnimalImportResult>(`${this.url}/import`, request);
   }

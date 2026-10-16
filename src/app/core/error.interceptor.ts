@@ -8,8 +8,8 @@ import { HouseholdService } from './household.service';
 import { t } from './i18n/i18n';
 
 /**
- * Toont fouten van de API (ProblemDetails) als melding. Een verlopen sessie stuurt naar de inlogpagina.
- * Fouten van /api/auth worden door de formulieren zelf getoond.
+ * Shows API errors (ProblemDetails) as a notification. An expired session redirects to the login page.
+ * Errors from /api/auth are shown by the forms themselves.
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const snackBar = inject(MatSnackBar);
@@ -20,7 +20,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       if (req.url.startsWith('/api/auth')) return throwError(() => error);
       if (error.status === 403 && (error.error as { type?: string } | null)?.type === 'household-access') {
-        // Het bewaarde huishouden is niet (meer) van jou, bv. omdat je bent verwijderd.
+        // The stored household is no longer yours, e.g. because you were removed.
         households.forget();
         snackBar.open(t('errors.noHouseholdAccess'), t('common.close'), { duration: 6000 });
         households.load().subscribe(() => router.navigate(['/voorraad']));
@@ -40,7 +40,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
 function describe(error: HttpErrorResponse): string {
   if (error.status === 0) return t('errors.serverUnreachable');
-  // Door nginx geweigerd, dus zonder ProblemDetails.
+  // Rejected by nginx, so without ProblemDetails.
   if (error.status === 413) return t('errors.fileTooLarge');
   const problem = error.error as { title?: string; errors?: Record<string, string[]> } | null;
   const details = problem?.errors ? Object.values(problem.errors).flat() : [];

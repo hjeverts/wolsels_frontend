@@ -207,7 +207,7 @@ export class HarvestForm implements OnInit {
   protected readonly woolId = signal<number | null>(null);
   protected readonly woolName = signal<string | null>(null);
   protected readonly wools = signal<Wool[]>([]);
-  /** Partijen waar eerdere oogsten van hetzelfde dier / dezelfde locatie in zitten, nieuwste eerst. */
+  /** Lots containing earlier harvests of the same animal / location, newest first. */
   private readonly suggestedIds = signal<number[]>([]);
 
   protected readonly form = this.fb.group({
@@ -232,13 +232,13 @@ export class HarvestForm implements OnInit {
   protected readonly source = toSignal(this.form.controls.source.valueChanges, { initialValue: 'animal' as Source });
   private readonly animalIdValue = toSignal(this.form.controls.animalId.valueChanges, { initialValue: null });
 
-  /** Actieve dieren, plus het huidige dier als dat inmiddels inactief is. */
+  /** Active animals, plus the current animal if it has become inactive. */
   protected readonly selectableAnimals = computed(() =>
     this.animals().filter((a) => a.active || a.id === this.animalIdValue()),
   );
 
   constructor() {
-    // Bij een gekozen dier/locatie de partijen van eerdere oogsten voorstellen.
+    // For a chosen animal/location, suggest the lots of earlier harvests.
     const controls = this.form.controls;
     combineLatest([
       controls.source.valueChanges.pipe(startWith(controls.source.value)),
@@ -259,7 +259,7 @@ export class HarvestForm implements OnInit {
   private suggest(harvests: Harvest[]): void {
     const ids = [...new Set(harvests.filter((h) => h.woolId && String(h.id) !== this.id()).map((h) => h.woolId!))];
     this.suggestedIds.set(ids);
-    // Nieuwe oogst: standaard bijtellen bij de meest recente partij van dit dier / deze locatie.
+    // New harvest: by default add to the most recent lot of this animal / location.
     const mode = this.form.controls.stockMode;
     if (!this.id() && mode.pristine) {
       if (ids.length) {

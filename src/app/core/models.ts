@@ -9,7 +9,7 @@ export interface Wool {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
-  /** Foto's, oudste eerst; de URL komt van ApiService.wools.photoUrl. */
+  /** Photos, oldest first; the URL comes from ApiService.wools.photoUrl. */
   photoIds: number[];
 }
 
@@ -102,7 +102,7 @@ export interface Animal {
 
 export type AnimalRequest = Omit<Animal, 'id' | 'locationName' | 'totalHarvestedGrams' | 'lastHarvestDate'>;
 
-/** Velden die bij het importeren van bestaande dieren bijgewerkt kunnen worden. */
+/** Fields that can be updated when importing existing animals. */
 export type AnimalImportField = 'species' | 'breed' | 'color' | 'birthDate' | 'location' | 'active' | 'notes';
 
 export interface AnimalImportRow {
@@ -112,9 +112,9 @@ export interface AnimalImportRow {
   breed: string;
   color: string;
   birthDate: string | null;
-  /** Naam van de locatie; een onbekende locatie wordt aangemaakt. */
+  /** Name of the location; an unknown location is created. */
   location: string;
-  /** Leeg: een nieuw dier is actief, een bestaand dier blijft ongewijzigd. */
+  /** Empty: a new animal is active, an existing animal stays unchanged. */
   active: boolean | null;
   notes: string;
 }
@@ -157,7 +157,7 @@ export interface HarvestRequest {
   grade: string | null;
   notes: string | null;
   addToStock: boolean;
-  /** Bestaande partij om bij te tellen; null = nieuwe partij. */
+  /** Existing lot to add to; null = new lot. */
   stockWoolId: number | null;
 }
 

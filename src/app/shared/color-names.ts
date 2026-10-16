@@ -1,11 +1,11 @@
 /**
- * Raadt een kleurcode bij een kleurnaam zoals "Naturel", "Donkerbruin" of "licht grijs gemêleerd", zodat
- * het kleurbolletje vanzelf klopt. Herkent Nederlandse (en wat Engelse) kleurnamen, ook in samenstellingen,
- * met licht/donker ervoor.
+ * Guesses a colour code for a colour name such as "Naturel", "Donkerbruin" or "licht grijs gemêleerd", so that
+ * the colour dot is right automatically. Recognises Dutch (and some English) colour names, also in compounds,
+ * with light/dark (licht/donker) in front.
  */
 
 const COLORS: Record<string, string> = {
-  // Naturel en wolkleuren
+  // Natural and wool colours
   naturel: '#efe6d2',
   natuur: '#efe6d2',
   natural: '#efe6d2',
@@ -36,7 +36,7 @@ const COLORS: Record<string, string> = {
   antraciet: '#3d3f42',
   zwart: '#1f1f1f',
   black: '#1f1f1f',
-  // Kleuren
+  // Colours
   rood: '#c0392b',
   rode: '#c0392b',
   red: '#c0392b',
@@ -94,7 +94,7 @@ const COLORS: Record<string, string> = {
 const LIGHTER = ['licht', 'lichte', 'pastel', 'zacht', 'zachte', 'light', 'pale'];
 const DARKER = ['donker', 'donkere', 'diep', 'diepe', 'dark', 'deep'];
 
-/** Langste namen eerst, zodat "marineblauw" vóór "blauw" en "gebroken wit" vóór "wit" gevonden wordt. */
+/** Longest names first, so that "marineblauw" is found before "blauw" and "gebroken wit" before "wit". */
 const NAMES = Object.keys(COLORS).sort((a, b) => b.length - a.length);
 
 function normalize(text: string): string {
@@ -107,13 +107,13 @@ function normalize(text: string): string {
 }
 
 /**
- * Kleurcode (#rrggbb) bij een kleurnaam, of null als de naam niet herkend wordt. Het eerste woord met een
- * kleur telt ("Bruin gemêleerd", "Zwart/wit"); binnen een samenstelling het laatste deel ("grijsbruin" is bruin).
+ * Colour code (#rrggbb) for a colour name, or null if the name is not recognised. The first word with a
+ * colour counts ("Bruin gemêleerd", "Zwart/wit"); within a compound the last part ("grijsbruin" is brown).
  */
 export function guessColorHex(name: string | null | undefined): string | null {
   const words = normalize(name ?? '').split(' ').filter(Boolean);
   for (let w = 0; w < words.length; w++) {
-    // "gebroken wit": een naam van twee woorden heeft voorrang.
+    // "gebroken wit": a two-word name takes precedence.
     const pair = w + 1 < words.length ? `${words[w]} ${words[w + 1]}` : '';
     if (pair in COLORS) return adjust(COLORS[pair], words[w - 1] ?? '');
 
@@ -124,7 +124,7 @@ export function guessColorHex(name: string | null | undefined): string | null {
   return null;
 }
 
-/** De kleurnaam die het verst naar achteren in het woord eindigt (het hoofddeel van een samenstelling). */
+/** The colour name that ends furthest back in the word (the head of a compound). */
 function findInWord(word: string): { name: string; index: number } | null {
   let best: { name: string; index: number; end: number } | null = null;
   for (const name of NAMES) {
@@ -137,7 +137,7 @@ function findInWord(word: string): { name: string; index: number } | null {
   return best;
 }
 
-/** Lichter of donkerder als er "licht"/"donker" (los of als voorvoegsel) voor de kleur staat. */
+/** Lighter or darker if "licht"/"donker" (separate or as a prefix) precedes the colour. */
 function adjust(hex: string, before: string): string {
   const prefix = before.trim();
   if (LIGHTER.some((m) => prefix === m || prefix.endsWith(m) || prefix.split(' ').includes(m))) return mix(hex, '#ffffff', 0.45);
@@ -155,7 +155,7 @@ function parse(hex: string): number[] {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 }
 
-/** Kleur voor een bolletje: de opgeslagen kleurcode, anders een gok op basis van de naam. */
+/** Colour for a dot: the saved colour code, otherwise a guess based on the name. */
 export function swatchColor(hex: string | null | undefined, name: string | null | undefined): string | null {
   return hex || guessColorHex(name);
 }

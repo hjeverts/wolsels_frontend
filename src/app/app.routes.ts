@@ -112,13 +112,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/forgot-password').then((m) => m.ForgotPassword),
   },
   {
-    // Bereikbaar via de link in de herstelmail, ook als je (nog) ingelogd bent.
+    // Reachable via the link in the reset mail, also while (still) logged in.
     path: 'wachtwoord-herstellen',
     title: 'title.resetPassword',
     loadComponent: () => import('./features/auth/reset-password').then((m) => m.ResetPassword),
   },
   {
-    // Bereikbaar met en zonder login.
+    // Reachable with and without login.
     path: 'uitnodiging/:token',
     title: 'title.invite',
     loadComponent: () => import('./features/household/invite-page').then((m) => m.InvitePage),

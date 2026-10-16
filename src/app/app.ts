@@ -33,7 +33,7 @@ export class App {
   private readonly router = inject(Router);
 
   constructor() {
-    // Na inloggen de huishoudens laden (voor de keuzelijst en het actieve huishouden).
+    // Load the households after logging in (for the selector and the active household).
     effect(() => {
       if (this.auth.user()) this.households.load().subscribe();
     });

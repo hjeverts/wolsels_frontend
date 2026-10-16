@@ -1,9 +1,9 @@
 import { t } from './i18n/i18n';
 
 /**
- * Rekent een mengverhouding om naar gewichten. Identiek aan de backend (BlendCalculator.cs),
- * zodat de gewichten direct tijdens het typen bijgewerkt kunnen worden. Bij opslaan rekent de
- * backend opnieuw en is daarmee leidend.
+ * Converts a blend ratio to weights. Identical to the backend (BlendCalculator.cs),
+ * so that the weights can be updated while typing. On save the backend calculates
+ * again and is therefore leading.
  */
 export type CalculationInput =
   | { ratios: number[]; basis: 'TotalWeight'; totalWeightGrams: number | null }
@@ -38,7 +38,7 @@ export function calculateBlend(input: CalculationInput, maxComponents: number): 
     if (total === null || !Number.isFinite(total) || total <= 0)
       return fail(t('calc.totalPositive'));
 
-    // Grootste-restmethode in tienden van een gram: de som klopt altijd exact.
+    // Largest remainder method in tenths of a gram: the sum is always exact.
     const totalTenths = Math.round(total * TENTHS_PER_GRAM);
     const exact = ratios.map((r) => (totalTenths * r) / ratioSum);
     const tenths = exact.map(Math.floor);

@@ -1,4 +1,4 @@
-/** Talen waarin Wolsels te gebruiken is. De naam staat in de taal zelf, zodat iedereen zijn eigen taal herkent. */
+/** Languages Wolsels is available in. Each name is in the language itself, so everyone recognises their own. */
 export const LANGUAGES = [
   { code: 'nl', name: 'Nederlands', locale: 'nl-NL' },
   { code: 'de', name: 'Deutsch', locale: 'de-DE' },
@@ -20,8 +20,8 @@ export function isLanguage(value: unknown): value is Language {
 }
 
 /**
- * De best passende taal bij taalcodes zoals de browser ze geeft ('de-AT', 'en', 'no', ...), of null.
- * Noors komt ook voor als 'no' en 'nn'.
+ * The best matching language for language tags as the browser provides them ('de-AT', 'en', 'no', ...), or null.
+ * Norwegian also appears as 'no' and 'nn'.
  */
 export function matchLanguage(tags: readonly string[]): Language | null {
   for (const tag of tags) {

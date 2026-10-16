@@ -70,7 +70,7 @@ export class Register {
   private readonly router = inject(Router);
   private readonly fb = inject(NonNullableFormBuilder);
 
-  /** Token uit een uitnodigingslink (?uitnodiging=...). */
+  /** Token from an invitation link (?uitnodiging=...). */
   readonly uitnodiging = input<string>();
 
   protected readonly minLength = MIN_PASSWORD_LENGTH;

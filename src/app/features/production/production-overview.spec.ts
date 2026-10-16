@@ -5,7 +5,7 @@ import { provideRouter } from '@angular/router';
 import { ProductionOverview } from './production-overview';
 
 describe('ProductionOverview', () => {
-  it('toont het totaal en de oogsten van het gekozen jaar', async () => {
+  it('shows the total and the harvests of the chosen year', async () => {
     TestBed.configureTestingModule({
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     });

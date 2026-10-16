@@ -6,8 +6,8 @@ import { CreatedInvite, Household, HouseholdSummary, InviteInfo } from './models
 const STORAGE_KEY = 'wolsels.household';
 
 /**
- * Het actieve huishouden. Elk tabblad stuurt het mee met elk API-verzoek (header X-Household, zie de
- * interceptor); de server controleert of je er lid van bent.
+ * The active household. Each tab sends it with every API request (header X-Household, see the
+ * interceptor); the server checks that you are a member of it.
  */
 @Injectable({ providedIn: 'root' })
 export class HouseholdService {
@@ -17,7 +17,7 @@ export class HouseholdService {
   readonly activeId = signal<number | null>(readStored());
   readonly active = computed(() => this.households().find((h) => h.id === this.activeId()) ?? null);
 
-  /** Laadt de huishoudens en kiest een geldig actief huishouden. */
+  /** Loads the households and picks a valid active household. */
   load(): Observable<HouseholdSummary[]> {
     return this.http.get<HouseholdSummary[]>('/api/households').pipe(
       tap((list) => {
@@ -27,13 +27,13 @@ export class HouseholdService {
     );
   }
 
-  /** Wisselt van huishouden en laadt de app opnieuw, zodat er geen gegevens van het vorige huishouden blijven staan. */
+  /** Switches household and reloads the app, so that no data of the previous household remains on screen. */
   switchTo(id: number, path = '/voorraad'): void {
     this.setActive(id);
     window.location.assign(path);
   }
 
-  /** Bij een 403 'household-access': het bewaarde huishouden is niet (meer) van deze gebruiker. */
+  /** On a 403 'household-access': the stored household no longer belongs to this user. */
   forget(): void {
     this.setActive(null);
   }
@@ -88,7 +88,7 @@ export class HouseholdService {
       if (id === null) localStorage.removeItem(STORAGE_KEY);
       else localStorage.setItem(STORAGE_KEY, String(id));
     } catch {
-      // Opslag niet beschikbaar (privévenster): alleen voor dit tabblad onthouden.
+      // Storage not available (private window): only remember it for this tab.
     }
   }
 }

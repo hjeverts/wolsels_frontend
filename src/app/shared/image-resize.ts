@@ -1,6 +1,6 @@
 import { t } from '../core/i18n/i18n';
 
-/** Langste zijde van een geüploade foto, en van de miniatuur in lijsten. */
+/** Longest side of an uploaded photo, and of the thumbnail in lists. */
 export const PHOTO_MAX_SIDE = 1600;
 export const THUMBNAIL_MAX_SIDE = 400;
 
@@ -12,9 +12,9 @@ export interface ResizedPhoto {
 }
 
 /**
- * Verkleint een foto in de browser tot maximaal {@link PHOTO_MAX_SIDE} pixels, plus een miniatuur. De
- * foto wordt opnieuw als JPEG opgeslagen; zo verdwijnen ook de EXIF-gegevens (zoals de GPS-locatie) en
- * staat een telefoonfoto meteen goed rechtop.
+ * Resizes a photo in the browser to at most {@link PHOTO_MAX_SIDE} pixels, plus a thumbnail. The
+ * photo is saved as JPEG again; that also removes the EXIF data (such as the GPS location) and
+ * a phone photo is upright right away.
  */
 export async function resizePhoto(file: Blob): Promise<ResizedPhoto> {
   let bitmap: ImageBitmap;
@@ -33,7 +33,7 @@ export async function resizePhoto(file: Blob): Promise<ResizedPhoto> {
   }
 }
 
-/** Afmetingen binnen maxSide, met behoud van verhouding; nooit vergroten. */
+/** Dimensions within maxSide, keeping the aspect ratio; never enlarges. */
 export function fitWithin(width: number, height: number, maxSide: number): { width: number; height: number } {
   const scale = Math.min(1, maxSide / Math.max(width, height));
   return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
@@ -46,7 +46,7 @@ async function toJpeg(bitmap: ImageBitmap, maxSide: number, quality: number): Pr
   canvas.height = height;
   const context = canvas.getContext('2d');
   if (!context) throw new ImageResizeError(t('photos.cannotResize'));
-  // Witte achtergrond voor transparante PNG's (JPEG kent geen transparantie).
+  // White background for transparent PNGs (JPEG has no transparency).
   context.fillStyle = '#ffffff';
   context.fillRect(0, 0, width, height);
   context.imageSmoothingQuality = 'high';

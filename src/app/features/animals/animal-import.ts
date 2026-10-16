@@ -233,7 +233,7 @@ export class AnimalImport {
   protected readonly maxRows = MAX_ROWS;
   protected readonly columns = ['line', 'name', 'species', 'location', 'status'];
 
-  /** Bestaande dieren; null zolang ze niet geladen zijn (dan kan nog niet bepaald worden wat nieuw is). */
+  /** Existing animals; null while not loaded (then it cannot be determined yet what is new). */
   private readonly animals = signal<Animal[] | null>(null);
   protected readonly animalsFailed = signal(false);
   private readonly table = signal<string[][]>([]);
@@ -246,7 +246,7 @@ export class AnimalImport {
   private readonly serverErrors = signal<string[]>([]);
 
   protected readonly headers = computed(() => (this.table()[0] ?? []).map((h, i) => h.trim() || t('import.column', { n: i + 1 })));
-  /** Eerste niet-lege waarde per kolom, als voorbeeld bij het koppelen. */
+  /** First non-empty value per column, as an example when mapping. */
   protected readonly samples = computed(() =>
     this.headers().map((_, i) => this.table().slice(1).find((r) => r[i]?.trim())?.[i].trim() ?? ''),
   );
@@ -258,7 +258,7 @@ export class AnimalImport {
     const inFile = new Map<string, number>();
     for (const r of rows) inFile.set(key(r.row.name), (inFile.get(key(r.row.name)) ?? 0) + 1);
 
-    // Dezelfde controles als de server, zodat je de fouten ziet vóór het importeren.
+    // The same checks as the server, so that you see the errors before importing.
     return rows.map((r) => {
       const errors = [...r.errors];
       const matches = existing.get(key(r.row.name)) ?? 0;
@@ -280,7 +280,7 @@ export class AnimalImport {
   });
   protected readonly errors = computed(() => [
     ...this.serverErrors(),
-    // Zonder naamkolom heeft elke regel die fout; dat staat al bij het veld Naam.
+    // Without a name column every line has that error; it is already shown at the Name field.
     ...(this.mapping().name === null ? [] : this.rows().flatMap((r) => r.errors.map((e) => t('import.lineError', { line: r.line, error: e })))),
   ]);
   protected readonly animalsLoaded = computed(() => this.animals() !== null);
@@ -311,7 +311,7 @@ export class AnimalImport {
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
-    // Eerst het vorige bestand vergeten, zodat dat na een mislukte keuze niet meer te importeren is.
+    // Forget the previous file first, so that it can no longer be imported after a failed choice.
     this.fileName.set(null);
     this.table.set([]);
     this.mapping.set(autoMap([]));

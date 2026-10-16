@@ -6,11 +6,11 @@ export type AnimalCsvField = 'name' | AnimalImportField;
 
 export interface AnimalCsvFieldDef {
   key: AnimalCsvField;
-  /** Kolomkop bij exporteren, in de taal van de app. */
+  /** Column header on export, in the app language. */
   label: TranslationKey;
   /**
-   * Kolomkoppen die bij importeren automatisch aan dit veld gekoppeld worden (naast het label). In alle talen,
-   * zodat een bestand uit een andere taal ook werkt.
+   * Column headers that are automatically mapped to this field on import (besides the label). In all languages,
+   * so that a file from another language works too.
    */
   aliases: string[];
   maxLength?: number;
@@ -78,10 +78,10 @@ export const ANIMAL_CSV_FIELDS: readonly AnimalCsvFieldDef[] = [
   },
 ];
 
-/** Per veld de index van de CSV-kolom, of null als het veld niet geïmporteerd wordt. */
+/** Per field the index of the CSV column, or null if the field is not imported. */
 export type ColumnMapping = Record<AnimalCsvField, number | null>;
 
-/** Leeg sjabloon, of alle dieren; de kolommen zijn gelijk aan wat de import automatisch herkent. */
+/** Empty template, or all animals; the columns match what the import recognises automatically. */
 export function animalsToCsv(animals: readonly Animal[] = []): string {
   return toCsv([
     ANIMAL_CSV_FIELDS.map((f) => t(f.label)),
@@ -107,7 +107,7 @@ function normalize(header: string): string {
     .trim();
 }
 
-/** Koppelt kolomkoppen aan velden op naam (zonder hoofdletters, accenten en leestekens). */
+/** Maps column headers to fields by name (ignoring case, accents and punctuation). */
 export function autoMap(headers: readonly string[]): ColumnMapping {
   const normalized = headers.map(normalize);
   const used = new Set<number>();
@@ -121,7 +121,7 @@ export function autoMap(headers: readonly string[]): ColumnMapping {
   return mapping;
 }
 
-/** yyyy-mm-dd, of d-m-yyyy / d/m/yyyy / d.m.yyyy (zoals Excel in Europa datums opslaat). */
+/** yyyy-mm-dd, or d-m-yyyy / d/m/yyyy / d.m.yyyy (as Excel in Europe saves dates). */
 export function parseDate(value: string): string | null | undefined {
   if (!value) return null;
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
@@ -134,7 +134,7 @@ export function parseDate(value: string): string | null | undefined {
   return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
 }
 
-/** Ja en nee in alle talen van de app (een export uit een andere taal moet ook te importeren zijn). */
+/** Yes and no in all app languages (an export from another language must be importable too). */
 const TRUE = [
   'ja', 'j', 'yes', 'y', 'true', 'waar', '1', 'x', 'actief', 'wahr', 'aktiv', 'oui', 'vrai', 'actif', 'si', 'sì', 'sí', 'vero',
   'attivo', 'sant', 'sann', 'sand', 'verdadero', 'activo', 'sim', 'verdadeiro', 'ativo', 'tak', 'prawda', 'aktywny', 'active',
@@ -145,7 +145,7 @@ const FALSE = [
   'inactive',
 ];
 
-/** ja/nee, true/false, 1/0 e.d.; leeg wordt null, iets onbekends undefined. */
+/** yes/no, true/false, 1/0 etc.; empty becomes null, anything unknown undefined. */
 export function parseBoolean(value: string): boolean | null | undefined {
   const v = value.toLowerCase();
   if (!v) return null;
@@ -155,13 +155,13 @@ export function parseBoolean(value: string): boolean | null | undefined {
 }
 
 export interface ImportRow {
-  /** Regelnummer in het bestand (de kopregel is regel 1). */
+  /** Line number in the file (the header line is line 1). */
   line: number;
   row: AnimalImportRow;
   errors: string[];
 }
 
-/** Zet de CSV-rijen (met kopregel) om naar te importeren dieren, met fouten per regel. Lege regels worden overgeslagen. */
+/** Converts the CSV rows (with header line) to animals to import, with errors per line. Empty lines are skipped. */
 export function buildImportRows(table: readonly string[][], mapping: ColumnMapping): ImportRow[] {
   const result: ImportRow[] = [];
   table.slice(1).forEach((cells, i) => {
@@ -205,7 +205,7 @@ function label(key: AnimalCsvField): string {
   return t(ANIMAL_CSV_FIELDS.find((f) => f.key === key)!.label);
 }
 
-/** De gekoppelde velden, behalve naam: alleen die worden bij bestaande dieren bijgewerkt. */
+/** The mapped fields, except name: only those are updated for existing animals. */
 export function importedFields(mapping: ColumnMapping): AnimalImportField[] {
   return ANIMAL_CSV_FIELDS.filter((f) => f.key !== 'name' && mapping[f.key] !== null).map((f) => f.key as AnimalImportField);
 }

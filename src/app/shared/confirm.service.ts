@@ -51,7 +51,7 @@ export class ConfirmService {
       .pipe(map((result) => result === true));
   }
 
-  /** Vraagt een keuze uit meerdere opties; de laatste optie is de hoofdknop. Geeft null bij annuleren. */
+  /** Asks to choose from several options; the last option is the primary button. Returns null on cancel. */
   choose<T extends string>(title: string, message: string, choices: { label: string; value: T }[]): Observable<T | null> {
     return this.dialog
       .open(ChoiceDialog, { data: { title, message, choices } })

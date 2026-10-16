@@ -1,6 +1,6 @@
 import { t } from './i18n/i18n';
 
-/** Garendiktes met een indicatie van wraps per inch (WPI). */
+/** Yarn weights with an indication of wraps per inch (WPI). */
 export const YARN_WEIGHTS: { name: string; minWpi: number; maxWpi: number }[] = [
   { name: 'Lace', minWpi: 30, maxWpi: 99 },
   { name: 'Light fingering', minWpi: 19, maxWpi: 29 },
@@ -18,7 +18,7 @@ export function yarnWeightForWpi(wpi: number | null | undefined): string | null 
   return YARN_WEIGHTS.find((y) => wpi >= y.minWpi && wpi <= y.maxWpi)?.name ?? null;
 }
 
-/** Suggesties bij het invullen (vrije tekst), in de taal van de app. */
+/** Suggestions while typing (free text), in the app language. */
 export const plyMethods = () => [
   t('yarn.singles'),
   t('yarn.twoPly'),

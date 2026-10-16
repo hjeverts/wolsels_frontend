@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslatePipe } from '../../core/i18n/i18n';
 
-/** Toont een foto op groot formaat. */
+/** Shows a photo at large size. */
 @Component({
   imports: [MatDialogModule, MatButtonModule, MatIconModule, TranslatePipe],
   template: `
