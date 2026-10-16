@@ -6,15 +6,15 @@ import { guessColorHex } from './color-names';
 import { ColorSwatch } from './color-swatch';
 
 /**
- * Laat een kleurcode de kleurnaam volgen ("Donkerbruin" → bruin bolletje), tot de gebruiker zelf een kleur
- * kiest. Aanmaken in een injection context (veldinitialisatie of constructor).
+ * Lets a colour code follow the colour name ("Donkerbruin" → brown dot), until the user picks a colour
+ * themselves. Create in an injection context (field initialiser or constructor).
  *
- * Opgeslagen wordt alleen een zelf gekozen kleur ({@link saveValue}); "volgt de naam" wordt opgeslagen als
- * geen kleurcode. Zo blijft een zelf gekozen kleur altijd staan, ook als die toevallig gelijk is aan de gok,
- * en profiteren oude gegevens vanzelf van betere kleurnamen.
+ * Only a manually chosen colour is saved ({@link saveValue}); "follows the name" is saved as
+ * no colour code. That way a manually chosen colour always stays, even if it happens to equal the guess,
+ * and old data automatically benefits from better colour names.
  */
 export class AutoColor {
-  /** Volgt de kleurnaam; false zodra de gebruiker zelf een kleur kiest. */
+  /** Follows the colour name; false as soon as the user picks a colour. */
   readonly auto = signal(true);
   readonly hex: Signal<string | null>;
   readonly state: Signal<'manual' | 'unknown' | 'auto'>;
@@ -33,15 +33,15 @@ export class AutoColor {
   }
 
   /**
-   * Na het laden van opgeslagen gegevens (na form.reset): een opgeslagen kleurcode is zelf gekozen en blijft
-   * staan; zonder kleurcode volgt het bolletje de naam.
+   * After loading saved data (after form.reset): a saved colour code was chosen manually and stays;
+   * without a colour code the dot follows the name.
    */
   loaded(): void {
     this.auto.set(!this.hexControl.value);
     if (this.auto()) this.hexControl.setValue(guessColorHex(this.name.value));
   }
 
-  /** De kleurcode om op te slaan: null als het bolletje de naam volgt. */
+  /** The colour code to save: null if the dot follows the name. */
   saveValue(): string | null {
     return this.auto() ? null : this.hexControl.value;
   }
@@ -57,7 +57,7 @@ export class AutoColor {
   }
 }
 
-/** Het bolletje met een (onzichtbare) kleurkiezer erover; gebruik als matSuffix in een kleurveld. */
+/** The dot with an (invisible) colour picker on top; use as matSuffix in a colour field. */
 @Component({
   selector: 'app-color-pick',
   imports: [ColorSwatch, TranslatePipe],
@@ -83,7 +83,7 @@ export class ColorPick {
   readonly color = input.required<AutoColor>();
 }
 
-/** Uitleg onder een kleurveld: volgt de naam, niet herkend, of zelf gekozen (met de weg terug). */
+/** Hint below a colour field: follows the name, not recognised, or chosen manually (with the way back). */
 @Component({
   selector: 'app-color-hint',
   imports: [TranslatePipe],

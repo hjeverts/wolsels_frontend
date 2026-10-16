@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { currentLocale } from '../core/i18n/i18n';
 
-/** Toont een gewicht in gram, of in kilogram vanaf 1000 g. */
+/** Shows a weight in grams, or in kilograms from 1000 g. */
 @Pipe({ name: 'grams' })
 export class GramsPipe implements PipeTransform {
   private readonly grams = new Intl.NumberFormat(currentLocale(), { maximumFractionDigits: 1 });

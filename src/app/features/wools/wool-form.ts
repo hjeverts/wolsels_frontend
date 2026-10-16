@@ -28,7 +28,7 @@ import { PhotoDialog } from './photo-dialog';
 
 const MAX_PHOTOS = 10;
 
-/** Een opgeslagen foto, of (bij een nieuwe partij) een foto die bij het opslaan geüpload wordt. */
+/** A saved photo, or (for a new lot) a photo that is uploaded on save. */
 type PhotoItem =
   | { kind: 'saved'; id: number }
   | { kind: 'pending'; key: number; resized: ResizedPhoto; thumbnailUrl: string; photoUrl: string };
@@ -286,10 +286,10 @@ export class WoolForm implements OnInit {
   protected readonly photos = signal<PhotoItem[]>([]);
   protected readonly processing = signal(false);
   private pendingKey = 0;
-  /** Formulier gesloten: een lopende verwerking van foto's stopt dan (geen nieuwe voorbeelden of uploads). */
+  /** Form closed: ongoing photo processing then stops (no new previews or uploads). */
   private destroyed = false;
 
-  /** Het bolletje volgt de kleurnaam, tot je zelf een kleur kiest. */
+  /** The dot follows the colour name until you pick a colour yourself. */
   protected readonly autoColor = new AutoColor(this.form.controls.color, this.form.controls.colorHex);
   protected readonly swatch = (w: Wool) => swatchColor(w.colorHex, w.color);
 
@@ -347,9 +347,9 @@ export class WoolForm implements OnInit {
     });
   }
 
-  /** Verkleint de gekozen foto's; bij een bestaande partij worden ze meteen geüpload. */
+  /** Resizes the chosen photos; for an existing lot they are uploaded right away. */
   protected async addPhotos(input: HTMLInputElement): Promise<void> {
-    // Tijdens het opslaan ligt vast welke foto's worden geüpload.
+    // While saving, the set of photos to upload is fixed.
     if (this.saving()) {
       input.value = '';
       return;
@@ -381,7 +381,7 @@ export class WoolForm implements OnInit {
         }
       }
     } catch (e) {
-      // Fouten van de server toont de error-interceptor al.
+      // The error interceptor already shows server errors.
       if (e instanceof ImageResizeError) this.snackBar.open(e.message, t('common.close'), { duration: 8000 });
     } finally {
       this.processing.set(false);
@@ -410,7 +410,7 @@ export class WoolForm implements OnInit {
     URL.revokeObjectURL(p.photoUrl);
   }
 
-  /** Uploadt de foto's die bij een nieuwe partij gekozen zijn, één voor één. */
+  /** Uploads the photos chosen for a new lot, one by one. */
   private uploadPending(woolId: number): Observable<unknown> {
     const pending = this.photos().filter((p) => p.kind === 'pending');
     if (!pending.length) return of(null);
@@ -421,7 +421,7 @@ export class WoolForm implements OnInit {
   }
 
   protected save(): void {
-    // Wachten tot gekozen foto's verkleind zijn, en niet twee keer opslaan.
+    // Wait until chosen photos are resized, and don't save twice.
     if (this.saving() || this.processing()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -443,7 +443,7 @@ export class WoolForm implements OnInit {
         switchMap((wool) =>
           this.uploadPending(wool.id).pipe(
             map(() => wool),
-            // De partij bestaat al: naar de bewerkpagina, zodat opnieuw opslaan geen tweede partij maakt.
+            // The lot already exists: go to the edit page, so that saving again doesn't create a second lot.
             catchError(() => {
               this.router.navigate(['/voorraad', wool.id]);
               return EMPTY;

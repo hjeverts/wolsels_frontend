@@ -1,4 +1,4 @@
-/** Nederlands: de bron voor alle vertalingen. Nieuwe teksten eerst hier toevoegen, daarna in de andere talen. */
+/** Dutch: the source for all translations. Add new texts here first, then in the other languages. */
 const nl = {
   // Paginatitels (tabblad)
   'title.household': 'Huishouden',

@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { map, of } from 'rxjs';
 import { AuthService } from './auth.service';
 
-/** Alleen voor beheerders (de backend controleert dit ook bij elk verzoek). */
+/** Only for administrators (the backend also checks this on every request). */
 export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

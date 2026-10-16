@@ -11,7 +11,7 @@ function setup(name = '', hex: string | null = null) {
 }
 
 describe('AutoColor', () => {
-  it('volgt de kleurnaam', () => {
+  it('follows the colour name', () => {
     const { nameControl, hexControl, color } = setup();
     nameControl.setValue('Donkerbruin');
     expect(hexControl.value).toBe(guessColorHex('Donkerbruin'));
@@ -21,7 +21,7 @@ describe('AutoColor', () => {
     expect(color.state()).toBe('unknown');
   });
 
-  it('houdt een zelf gekozen kleur, tot je de naam weer laat volgen', () => {
+  it('keeps a manually chosen colour until the name is followed again', () => {
     const { nameControl, hexControl, color } = setup();
     nameControl.setValue('Rood');
     color.pick('#123456');
@@ -33,9 +33,9 @@ describe('AutoColor', () => {
     expect(color.state()).toBe('auto');
   });
 
-  it('geeft na het laden een bolletje als er geen kleurcode is opgeslagen', () => {
+  it('shows a dot after loading when no colour code is saved', () => {
     const { nameControl, hexControl, color } = setup();
-    // Zoals form.reset: eerst de naam, daarna de (lege) kleurcode.
+    // Like form.reset: first the name, then the (empty) colour code.
     nameControl.setValue('Naturel');
     hexControl.setValue(null);
     color.loaded();
@@ -43,14 +43,14 @@ describe('AutoColor', () => {
     expect(color.auto()).toBe(true);
   });
 
-  it('houdt na het laden een opgeslagen kleurcode, ook als die gelijk is aan de gok', () => {
+  it('keeps a saved colour code after loading, even if it equals the guess', () => {
     const own = setup('Blauw', '#abcdef');
     own.color.loaded();
     expect(own.color.auto()).toBe(false);
     own.nameControl.setValue('Geel');
     expect(own.hexControl.value).toBe('#abcdef');
 
-    // Bv. "Wit" met zelf gekozen #ffffff: wordt de naam "Crème", dan blijft het wit.
+    // E.g. "Wit" with a manually chosen #ffffff: if the name becomes "Crème", it stays white.
     const sameAsGuess = setup('Wit', guessColorHex('Wit'));
     sameAsGuess.color.loaded();
     expect(sameAsGuess.color.auto()).toBe(false);
@@ -58,7 +58,7 @@ describe('AutoColor', () => {
     expect(sameAsGuess.hexControl.value).toBe(guessColorHex('Wit'));
   });
 
-  it('slaat alleen een zelf gekozen kleur op', () => {
+  it('only saves a manually chosen colour', () => {
     const { nameControl, color } = setup();
     nameControl.setValue('Rood');
     expect(color.saveValue()).toBeNull();

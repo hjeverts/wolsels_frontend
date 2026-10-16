@@ -26,7 +26,7 @@ import { ConfirmService } from '../../shared/confirm.service';
 import { emptyToNull, toNumber } from '../../shared/form-utils';
 import { GramsPipe } from '../../shared/grams.pipe';
 
-/** Welk gewichtsveld de gebruiker als laatste heeft ingevuld; dat veld is leidend voor de berekening. */
+/** Which weight field the user filled in last; that field leads the calculation. */
 type Basis = { kind: 'total' } | { kind: 'component'; index: number };
 
 type ComponentGroup = FormGroup<{
@@ -105,7 +105,7 @@ export class BlendForm implements OnInit {
     dyeMethod: [''],
   });
 
-  /** Het bolletje volgt de verfkleur, tot je zelf een kleur kiest. */
+  /** The dot follows the dye colour until you pick a colour yourself. */
   protected readonly dyeColor = new AutoColor(this.form.controls.dyeColor, this.form.controls.dyeColorHex);
 
   protected get components(): FormArray<ComponentGroup> {
@@ -132,7 +132,7 @@ export class BlendForm implements OnInit {
 
   protected readonly wpiSuggestion = computed(() => yarnWeightForWpi(toNumber(this.formValue().wrapsPerInch)));
 
-  /** Waarschuwingen per regel als er meer wol nodig is dan op voorraad (dezelfde wol meerdere keren telt op). */
+  /** Warnings per row when more wool is needed than in stock (the same wool used several times adds up). */
   protected readonly stockWarnings = computed(() => {
     const rows = this.formValue().components ?? [];
     const needed = new Map<number, number>();
@@ -158,7 +158,7 @@ export class BlendForm implements OnInit {
       this.addComponent();
       return;
     }
-    // Wacht ook op de wollijst zodat de keuzelijsten direct goed gevuld zijn.
+    // Also wait for the wool list so that the selects are filled correctly right away.
     combineLatest([this.api.blends.get(+id), this.api.wools.list()]).subscribe(([blend]) => this.load(blend));
   }
 
@@ -235,7 +235,7 @@ export class BlendForm implements OnInit {
     this.recalculate();
   }
 
-  /** Rekent alle niet-leidende gewichtsvelden opnieuw uit. */
+  /** Recalculates all non-leading weight fields. */
   protected recalculate(): void {
     const rows = this.components.getRawValue();
     const ratios = rows.map((r) => toNumber(r.ratio) ?? 0);
@@ -252,7 +252,7 @@ export class BlendForm implements OnInit {
 
     const result = calculateBlend(input, this.maxComponents());
     if (!result.ok) {
-      // Geen foutmelding zolang er nog niets is ingevuld.
+      // No error message as long as nothing has been filled in.
       const untouched = rows.every((r) => toNumber(r.ratio) === null);
       this.calcError.set(rows.length && !untouched ? result.error : null);
       this.percentages.set([]);

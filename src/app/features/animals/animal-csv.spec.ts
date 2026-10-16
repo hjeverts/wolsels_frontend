@@ -32,11 +32,11 @@ const animal: Animal = {
 };
 
 describe('animalsToCsv', () => {
-  it('maakt een leeg sjabloon met alleen kolomkoppen', () => {
+  it('creates an empty template with only column headers', () => {
     expect(animalsToCsv()).toBe('Naam,Diersoort,Ras,Kleur,Geboortedatum,Locatie,Actief,Notities\r\n');
   });
 
-  it('exporteert dieren zo dat de import ze ongewijzigd terugleest', () => {
+  it('exports animals so that the import reads them back unchanged', () => {
     const table = parseCsv(animalsToCsv([animal]));
     const [row] = buildImportRows(table, autoMap(table[0]));
     expect(row.errors).toEqual([]);
@@ -55,7 +55,7 @@ describe('animalsToCsv', () => {
 });
 
 describe('autoMap', () => {
-  it('koppelt kolommen op naam, ook met andere schrijfwijzen', () => {
+  it('maps columns by name, also with other spellings', () => {
     const mapping = autoMap(['NAAM', 'Opmerkingen', 'Geb. datum', 'Soort', 'iets anders', 'Stal']);
     expect(mapping).toEqual({
       name: 0,
@@ -70,13 +70,13 @@ describe('autoMap', () => {
     expect(importedFields(mapping)).toEqual(['species', 'birthDate', 'location', 'notes']);
   });
 
-  it('gebruikt een kolom maar één keer', () => {
+  it('uses a column only once', () => {
     expect(autoMap(['Locatie', 'Locatie']).location).toBe(0);
   });
 });
 
 describe('parseDate', () => {
-  it('leest ISO en Nederlandse notatie', () => {
+  it('reads ISO and European notation', () => {
     expect(parseDate('2024-03-01')).toBe('2024-03-01');
     expect(parseDate('1-3-2024')).toBe('2024-03-01');
     expect(parseDate('01/03/2024')).toBe('2024-03-01');
@@ -84,7 +84,7 @@ describe('parseDate', () => {
     expect(parseDate('')).toBeNull();
   });
 
-  it('weigert ongeldige datums', () => {
+  it('rejects invalid dates', () => {
     expect(parseDate('31-2-2024')).toBeUndefined();
     expect(parseDate('maart 2024')).toBeUndefined();
     expect(parseDate('2024-13-01')).toBeUndefined();
@@ -92,7 +92,7 @@ describe('parseDate', () => {
 });
 
 describe('parseBoolean', () => {
-  it('kent ja/nee en varianten', () => {
+  it('knows yes/no and variants', () => {
     expect(['Ja', 'x', '1', 'TRUE'].map(parseBoolean)).toEqual([true, true, true, true]);
     expect(['nee', 'N', '0', 'onwaar'].map(parseBoolean)).toEqual([false, false, false, false]);
     expect(parseBoolean('')).toBeNull();
@@ -101,7 +101,7 @@ describe('parseBoolean', () => {
 });
 
 describe('buildImportRows', () => {
-  it('slaat lege regels over en geeft fouten met het regelnummer', () => {
+  it('skips empty lines and reports errors with the line number', () => {
     const table = parseCsv('Naam;Geboortedatum;Actief\nBol;;\n;;\n;2024-01-01;\nPluis;30-2-2024;soms\n');
     const rows = buildImportRows(table, autoMap(table[0]));
     expect(rows.map((r) => r.line)).toEqual([2, 4, 5]);
@@ -111,22 +111,22 @@ describe('buildImportRows', () => {
     expect(rows[2].errors).toHaveLength(2);
   });
 
-  it('negeert niet-gekoppelde kolommen', () => {
+  it('ignores unmapped columns', () => {
     const table = parseCsv('Naam;Ras\nBol;Rex');
     const rows = buildImportRows(table, { ...autoMap(table[0]), breed: null });
     expect(rows[0].row.breed).toBe('');
   });
 
-  it('controleert de maximale lengte', () => {
+  it('checks the maximum length', () => {
     const table = [['Naam'], ['x'.repeat(201)]];
     expect(buildImportRows(table, autoMap(table[0]))[0].errors).toEqual(['Naam is langer dan 200 tekens.']);
   });
 });
 
-describe('animal-csv in andere talen', () => {
+describe('animal-csv in other languages', () => {
   afterEach(() => useTranslations('nl', nl));
 
-  it('leest een export uit een andere taal ongewijzigd terug', () => {
+  it('reads back an export from another language unchanged', () => {
     const german: Animal = {
       id: 1, name: 'Flocke', species: 'Kaninchen', breed: null, color: 'Weiß', birthDate: '2024-03-01',
       locationId: null, locationName: 'Stall', active: false, notes: null, totalHarvestedGrams: 0, lastHarvestDate: null,

@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { map, of } from 'rxjs';
 import { AuthService } from './auth.service';
 
-/** Alleen voor ingelogde gebruikers; anders naar de inlogpagina met terugkeer-URL. */
+/** Only for logged-in users; otherwise to the login page with a return URL. */
 export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -13,7 +13,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
   );
 };
 
-/** Inlog- en registratiepagina's zijn niet nodig als je al bent ingelogd. */
+/** The login and sign-up pages are not needed when already logged in. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

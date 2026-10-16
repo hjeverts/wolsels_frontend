@@ -122,7 +122,7 @@ export class WoolList {
   private readonly router = inject(Router);
 
   private readonly baseColumns = ['name', 'woolType', 'color', 'origin', 'weight'];
-  /** De fotokolom alleen als er partijen met een foto zijn. */
+  /** The photo column only if there are lots with a photo. */
   protected readonly columns = computed(() =>
     (this.wools() ?? []).some((w) => w.photoIds.length) ? ['photo', ...this.baseColumns] : this.baseColumns,
   );

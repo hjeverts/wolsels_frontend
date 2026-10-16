@@ -22,19 +22,19 @@ function placeholders(text: string): string[] {
   return [...new Set(text.match(/\{\w+\}/g) ?? [])].sort();
 }
 
-describe('vertalingen', () => {
+describe('translations', () => {
   afterEach(() => useTranslations('nl', nl));
 
-  it('zijn er voor elke taal van de app', () => {
+  it('exist for every app language', () => {
     expect(Object.keys(all).sort()).toEqual(LANGUAGES.map((l) => l.code).sort());
   });
 
-  it('gebruiken in elke taal dezelfde parameters als het Nederlands', () => {
+  it('use the same parameters as the Dutch text in every language', () => {
     for (const [lang, translations] of Object.entries(all)) {
       for (const [key, entry] of Object.entries(nl)) {
         const expected = placeholders(texts(entry).join(' '));
         for (const text of texts(translations[key as keyof Translations])) {
-          // Een meervoudsvorm mag {count} weglaten ("enkeldraads"), maar geen andere parameters verzinnen.
+          // A plural form may omit {count} ("singles"), but must not invent other parameters.
           const found = placeholders(text);
           expect(found.every((p) => expected.includes(p)), `${lang} ${key}: ${text}`).toBe(true);
           if (typeof entry === 'string') expect(found, `${lang} ${key}`).toEqual(expected);
@@ -43,21 +43,21 @@ describe('vertalingen', () => {
     }
   });
 
-  it('vult parameters in en kiest de meervoudsvorm', () => {
+  it('fills in parameters and picks the plural form', () => {
     expect(t('reset.for', { email: 'a@b.nl' })).toBe('Voor a@b.nl');
     expect(t('app.memberCount', { count: 1 })).toBe('1 lid');
     expect(t('app.memberCount', { count: 3 })).toBe('3 leden');
     expect(t('import.submit', { count: 0 })).toBe('Importeren');
   });
 
-  it('kent de Poolse meervoudsvormen', () => {
+  it('knows the Polish plural forms', () => {
     useTranslations('pl', pl);
     expect(t('import.animalCount', { count: 1 })).toBe('1 zwierzę');
     expect(t('import.animalCount', { count: 3 })).toBe('3 zwierzęta');
     expect(t('import.animalCount', { count: 5 })).toBe('5 zwierząt');
   });
 
-  it('herkent de taal van de browser', () => {
+  it('recognises the browser language', () => {
     expect(matchLanguage(['de-AT', 'en'])).toBe('de');
     expect(matchLanguage(['no'])).toBe('nb');
     expect(matchLanguage(['ja', 'pt-BR'])).toBe('pt');

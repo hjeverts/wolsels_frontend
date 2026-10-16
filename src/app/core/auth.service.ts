@@ -9,7 +9,7 @@ export interface Me {
   twoFactorEnabled: boolean;
   recoveryCodesLeft: number;
   isAdmin: boolean;
-  /** Taal uit het profiel; null voor een account dat nog geen taal heeft. */
+  /** Language from the profile; null for an account that has no language yet. */
   language: string | null;
 }
 
@@ -23,14 +23,14 @@ export interface TwoFactorState {
 
 export type LoginResult = 'ok' | 'requiresTwoFactor';
 
-/** Fout bij inloggen of registreren, met een (vertaalde) melding voor in het formulier. */
+/** Error when logging in or signing up, with a (translated) message for the form. */
 export class AuthError extends Error {}
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
 
-  /** undefined = nog niet bekend, null = niet ingelogd. */
+  /** undefined = not known yet, null = not logged in. */
   readonly user = signal<Me | null | undefined>(undefined);
   readonly isLoggedIn = computed(() => !!this.user());
 
@@ -63,7 +63,7 @@ export class AuthService {
     else if (me.language !== currentLanguage()) switchLanguage(me.language);
   }
 
-  /** Wat er mogelijk is op de inlogpagina's; noemt registreren en "wachtwoord vergeten". */
+  /** What is possible on the login pages: sign-up and "forgot password". */
   allowRegistration(): Observable<{ allowRegistration: boolean; passwordResetAvailable: boolean }> {
     return this.http.get<{ allowRegistration: boolean; passwordResetAvailable: boolean }>('/api/auth/options');
   }
@@ -119,7 +119,7 @@ export class AuthService {
     );
   }
 
-  /** Haalt de 2FA-status op, of wijzigt die. Na een wijziging wordt de sessie vernieuwd. */
+  /** Gets the 2FA status, or changes it. After a change the session is renewed. */
   twoFactor(request: {
     enable?: boolean;
     twoFactorCode?: string;

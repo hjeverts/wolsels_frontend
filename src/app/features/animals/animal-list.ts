@@ -110,7 +110,7 @@ export class AnimalList {
     this.api.animals.list().subscribe((animals) => this.animals.set(animals));
   }
 
-  /** Alle dieren, ook inactieve; het bestand kan na bewerken weer geïmporteerd worden. */
+  /** All animals, including inactive ones; the file can be imported again after editing. */
   protected exportAll(): void {
     downloadCsv(`${t('animals.exportFileName')}-${today()}.csv`, animalsToCsv(this.animals() ?? []));
   }

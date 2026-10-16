@@ -80,7 +80,7 @@ export class Login {
   private readonly router = inject(Router);
   private readonly fb = inject(NonNullableFormBuilder);
 
-  /** Pagina waar de gebruiker naartoe wilde (uit ?terug=). */
+  /** Page the user wanted to go to (from ?terug=). */
   readonly terug = input<string>();
 
   protected readonly step = signal<'password' | 'code'>('password');

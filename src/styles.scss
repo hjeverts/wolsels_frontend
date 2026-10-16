@@ -23,7 +23,7 @@ body {
   height: 100%;
 }
 
-// Gedeelde layout-hulpklassen voor de pagina's.
+// Shared layout helper classes for the pages.
 .page-header {
   display: flex;
   align-items: center;
@@ -134,7 +134,7 @@ body {
   }
 }
 
-// Spinknoppen van getalvelden weglaten: ze overlappen labels en eenheden in smalle velden.
+// Hide the spin buttons of number fields: they overlap labels and units in narrow fields.
 input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;

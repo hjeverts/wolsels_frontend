@@ -38,7 +38,7 @@ export class Account implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly fb = inject(NonNullableFormBuilder);
 
-  /** ?welkom=1 na registratie: 2FA aanraden. */
+  /** ?welkom=1 after sign-up: recommend 2FA. */
   readonly welkom = input<string>();
 
   protected readonly minLength = MIN_PASSWORD_LENGTH;
@@ -65,7 +65,7 @@ export class Account implements OnInit {
     this.auth.loadMe().subscribe();
   }
 
-  /** Stap 1: sleutel ophalen en als QR-code tonen. */
+  /** Step 1: get the key and show it as a QR code. */
   protected startSetup(): void {
     this.twoFactorError.set(null);
     this.auth.twoFactor().subscribe({
@@ -80,7 +80,7 @@ export class Account implements OnInit {
     });
   }
 
-  /** Stap 2: code uit de app controleren en 2FA inschakelen. */
+  /** Step 2: check the code from the app and turn on 2FA. */
   protected enable(): void {
     if (this.codeForm.invalid) {
       this.codeForm.markAllAsTouched();
@@ -153,7 +153,7 @@ export class Account implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  /** Slaat de taal op in het profiel en laadt de app opnieuw in die taal. */
+  /** Saves the language in the profile and reloads the app in that language. */
   protected changeLanguage(language: Language): void {
     const previous = this.language();
     this.language.set(language);

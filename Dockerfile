@@ -5,9 +5,9 @@ RUN npm ci
 COPY . .
 RUN npx ng build --configuration production
 
-# Draait als niet-root gebruiker (nginx) op poort 8080.
+# Runs as a non-root user (nginx) on port 8080.
 FROM nginxinc/nginx-unprivileged:1.30-alpine
-# Beveiligingsupdates van Alpine meenemen; curl is niet nodig (de healthcheck gebruikt busybox-wget).
+# Pick up Alpine security updates; curl is not needed (the health check uses busybox wget).
 USER root
 RUN apk upgrade --no-cache && apk del --no-cache curl
 USER nginx

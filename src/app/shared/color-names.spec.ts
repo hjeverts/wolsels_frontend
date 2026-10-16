@@ -1,7 +1,7 @@
 import { guessColorHex } from './color-names';
 
 describe('guessColorHex', () => {
-  it('herkent gangbare wolkleuren', () => {
+  it('recognises common wool colours', () => {
     expect(guessColorHex('Naturel')).toBe('#efe6d2');
     expect(guessColorHex('Wit')).toBe('#ffffff');
     expect(guessColorHex('ZWART')).toBe('#1f1f1f');
@@ -9,7 +9,7 @@ describe('guessColorHex', () => {
     expect(guessColorHex('Moorit')).toBe('#6f4a32');
   });
 
-  it('kiest de langste naam en het hoofddeel van een samenstelling', () => {
+  it('picks the longest name and the head of a compound', () => {
     expect(guessColorHex('Marineblauw')).toBe('#1f2f5a');
     expect(guessColorHex('Gebroken wit')).toBe('#f4f1e8');
     expect(guessColorHex('Grijsbruin')).toBe(guessColorHex('Bruin'));
@@ -18,13 +18,13 @@ describe('guessColorHex', () => {
     expect(guessColorHex('Oudroze')).toBe('#c98b8f');
   });
 
-  it('neemt de eerste kleur bij meerdere kleuren en negeert andere woorden', () => {
+  it('takes the first of several colours and ignores other words', () => {
     expect(guessColorHex('Bruin gemêleerd')).toBe(guessColorHex('Bruin'));
     expect(guessColorHex('Zwart/wit')).toBe(guessColorHex('Zwart'));
     expect(guessColorHex('gemêleerd rode tinten')).toBe(guessColorHex('Rood'));
   });
 
-  it('maakt de kleur lichter of donkerder', () => {
+  it('makes the colour lighter or darker', () => {
     const grijs = guessColorHex('Grijs')!;
     const licht = guessColorHex('Lichtgrijs')!;
     const donker = guessColorHex('donker grijs')!;
@@ -34,7 +34,7 @@ describe('guessColorHex', () => {
     expect(guessColorHex('Pastel blauw')).toMatch(/^#[0-9a-f]{6}$/);
   });
 
-  it('geeft null voor onbekende of lege namen', () => {
+  it('returns null for unknown or empty names', () => {
     expect(guessColorHex('Regenboog')).toBeNull();
     expect(guessColorHex('')).toBeNull();
     expect(guessColorHex(null)).toBeNull();

@@ -91,7 +91,7 @@ export class HouseholdPage implements OnInit {
     try {
       await navigator.share({ title: t('household.shareTitle'), text: t('household.shareText', { name: this.household()?.name }), url });
     } catch {
-      // Delen geannuleerd.
+      // Sharing cancelled.
     }
   }
 

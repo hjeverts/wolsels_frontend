@@ -2,7 +2,7 @@ import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { HouseholdService } from './household.service';
 
-/** Stuurt het actieve huishouden mee met API-verzoeken (niet nodig voor accounts en de lijst met huishoudens). */
+/** Sends the active household with API requests (not needed for accounts and the list of households). */
 export const householdInterceptor: HttpInterceptorFn = (req, next) => {
   const id = inject(HouseholdService).activeId();
   const needsHousehold =

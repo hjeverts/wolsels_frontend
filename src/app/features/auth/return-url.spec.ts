@@ -1,7 +1,7 @@
 import { safeReturnUrl } from './return-url';
 
 describe('safeReturnUrl', () => {
-  it('staat interne paden toe', () => {
+  it('allows internal paths', () => {
     expect(safeReturnUrl('/mengsels/3')).toBe('/mengsels/3');
   });
 

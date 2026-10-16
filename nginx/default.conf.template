@@ -1,7 +1,7 @@
-# nginx in de frontend-container: serveert de Angular-app en stuurt /api/ door naar de backend.
-# Staat achter de nginx op de server (TLS); die proxyt alles naar deze container.
+# nginx in the frontend container: serves the Angular app and forwards /api/ to the backend.
+# Sits behind the nginx on the server (TLS), which proxies everything to this container.
 
-# Een meegestuurd X-Forwarded-Proto (van de nginx op de server) doorgeven, anders het eigen schema.
+# Pass on an incoming X-Forwarded-Proto (from the nginx on the server), otherwise our own scheme.
 map $http_x_forwarded_proto $forwarded_proto {
     default $http_x_forwarded_proto;
     ""      $scheme;
@@ -14,12 +14,12 @@ server {
     index index.html;
 
     server_tokens off;
-    # Foto's (al verkleind door de browser) plus miniatuur; de backend begrenst zelf op ±2,3 MB.
+    # Photos (already resized by the browser) plus thumbnail; the backend itself limits to ±2.3 MB.
     client_max_body_size 4m;
 
-    # Echte client-IP alleen overnemen van proxies op interne netwerken (de nginx op de server bereikt
-    # de container via het Docker-netwerk). Een bezoeker die rechtstreeks verbindt kan zo geen IP vervalsen
-    # om de pogingslimieten te omzeilen.
+    # Only take the real client IP from proxies on internal networks (the nginx on the server reaches
+    # the container via the Docker network). That way a visitor connecting directly cannot forge an IP
+    # to get around the attempt limits.
     set_real_ip_from 10.0.0.0/8;
     set_real_ip_from 172.16.0.0/12;
     set_real_ip_from 192.168.0.0/16;
@@ -27,15 +27,15 @@ server {
     set_real_ip_from ::1;
     real_ip_header X-Forwarded-For;
 
-    # Beveiligingsheaders. Let op: een add_header in een location vervangt deze allemaal, daarom regelen de
-    # locations hieronder caching met 'expires' in plaats van add_header.
+    # Security headers. Note: an add_header in a location replaces all of these, which is why the
+    # locations below handle caching with 'expires' instead of add_header.
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
     add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
 
-    # Backend-naam steeds opnieuw opzoeken, zodat een herstarte backend met een nieuw IP bereikbaar blijft.
+    # Resolve the backend name each time, so that a restarted backend with a new IP stays reachable.
     resolver ${NGINX_RESOLVER} valid=10s ipv6=off;
 
     location /api/ {
@@ -43,34 +43,34 @@ server {
         proxy_pass $api_upstream;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
-        # Alleen het vastgestelde client-IP doorgeven, niet de (vervalsbare) keten van de bezoeker.
+        # Only pass on the established client IP, not the visitor's (forgeable) chain.
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $forwarded_proto;
         proxy_read_timeout 60s;
     }
 
-    # JS- en CSS-bestandsnamen bevatten een hash; ze mogen lang gecachet worden.
+    # JS and CSS file names contain a hash; they may be cached for a long time.
     location ~* \.(?:js|css|woff2?)$ {
         expires 1y;
         access_log off;
         try_files $uri =404;
     }
 
-    # Iconen en manifest hebben vaste namen: korter cachen, zodat een nieuw icoon wel aankomt.
+    # Icons and manifest have fixed names: cache them shorter, so that a new icon does arrive.
     location ~* \.(?:ico|svg|png|webp)$ {
         expires 7d;
         access_log off;
         try_files $uri =404;
     }
 
-    # Web-app-manifest (installeren op tablet/telefoon) met het juiste MIME-type.
+    # Web app manifest (install on tablet/phone) with the right MIME type.
     location = /manifest.webmanifest {
         default_type application/manifest+json;
         expires 7d;
         try_files $uri =404;
     }
 
-    # Angular-routes (bv. /mengsels/3) altijd naar index.html; die zelf niet cachen.
+    # Angular routes (e.g. /mengsels/3) always to index.html; don't cache that file itself.
     location / {
         expires -1;
         try_files $uri $uri/ /index.html =404;

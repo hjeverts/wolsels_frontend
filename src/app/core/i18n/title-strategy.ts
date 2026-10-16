@@ -3,7 +3,7 @@ import { Title } from '@angular/platform-browser';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 import { TranslationKey, t } from './i18n';
 
-/** De titel van een route is een vertaalsleutel; het tabblad toont "<titel> · Wolsels". */
+/** A route's title is a translation key; the tab shows "<title> · Wolsels". */
 @Injectable()
 export class TranslatedTitleStrategy extends TitleStrategy {
   private readonly title = inject(Title);
