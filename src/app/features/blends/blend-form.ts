@@ -18,6 +18,7 @@ import { ApiService } from '../../core/api.service';
 import { CalculationInput, calculateBlend } from '../../core/blend-calculator';
 import { Blend, BlendStatus, SpinDirection, Wool } from '../../core/models';
 import { DYE_PRODUCTS, PLY_METHODS, YARN_WEIGHTS, yarnWeightForWpi } from '../../core/yarn';
+import { AutoColor, ColorHint, ColorPick } from '../../shared/auto-color';
 import { swatchColor } from '../../shared/color-names';
 import { ColorSwatch } from '../../shared/color-swatch';
 import { ConfirmService } from '../../shared/confirm.service';
@@ -49,6 +50,8 @@ type ComponentGroup = FormGroup<{
     MatSlideToggleModule,
     MatAutocompleteModule,
     MatTooltipModule,
+    ColorHint,
+    ColorPick,
     ColorSwatch,
     GramsPipe,
   ],
@@ -101,6 +104,9 @@ export class BlendForm implements OnInit {
     dyeProduct: [''],
     dyeMethod: [''],
   });
+
+  /** Het bolletje volgt de verfkleur, tot je zelf een kleur kiest. */
+  protected readonly dyeColor = new AutoColor(this.form.controls.dyeColor, this.form.controls.dyeColorHex);
 
   protected get components(): FormArray<ComponentGroup> {
     return this.form.controls.components;
@@ -180,6 +186,7 @@ export class BlendForm implements OnInit {
       dyeProduct: blend.dyeProduct ?? '',
       dyeMethod: blend.dyeMethod ?? '',
     });
+    this.dyeColor.loaded();
     this.basis.set(
       blend.basis === 'ComponentWeight' && blend.basisComponentIndex !== null
         ? { kind: 'component', index: blend.basisComponentIndex }
@@ -308,7 +315,7 @@ export class BlendForm implements OnInit {
         spinDirection: v.spinDirection,
         isDyed: v.isDyed,
         dyeColor: emptyToNull(v.dyeColor),
-        dyeColorHex: v.isDyed ? v.dyeColorHex : null,
+        dyeColorHex: v.isDyed ? this.dyeColor.saveValue() : null,
         dyeProduct: emptyToNull(v.dyeProduct),
         dyeMethod: emptyToNull(v.dyeMethod),
       })
