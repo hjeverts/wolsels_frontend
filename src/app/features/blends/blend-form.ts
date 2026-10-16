@@ -18,6 +18,7 @@ import { ApiService } from '../../core/api.service';
 import { CalculationInput, calculateBlend } from '../../core/blend-calculator';
 import { Blend, BlendStatus, SpinDirection, Wool } from '../../core/models';
 import { DYE_PRODUCTS, PLY_METHODS, YARN_WEIGHTS, yarnWeightForWpi } from '../../core/yarn';
+import { swatchColor } from '../../shared/color-names';
 import { ColorSwatch } from '../../shared/color-swatch';
 import { ConfirmService } from '../../shared/confirm.service';
 import { emptyToNull, toNumber } from '../../shared/form-utils';
@@ -61,6 +62,7 @@ export class BlendForm implements OnInit {
   private readonly fb = inject(NonNullableFormBuilder);
 
   readonly id = input<string>();
+  protected readonly swatch = (w: Wool) => swatchColor(w.colorHex, w.color);
 
   protected readonly yarnWeights = YARN_WEIGHTS;
   protected readonly plyMethods = PLY_METHODS;

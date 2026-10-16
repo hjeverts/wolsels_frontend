@@ -48,13 +48,13 @@
               <mat-select formControlName="woolId" required>
                 <mat-select-trigger>
                   @if (woolById(row.controls.woolId.value); as wool) {
-                    <span class="inline"><app-color-swatch [color]="wool.colorHex" /> {{ wool.name }}</span>
+                    <span class="inline"><app-color-swatch [color]="swatch(wool)" /> {{ wool.name }}</span>
                   }
                 </mat-select-trigger>
                 @for (wool of wools(); track wool.id) {
                   <mat-option [value]="wool.id">
                     <span class="inline">
-                      <app-color-swatch [color]="wool.colorHex" />
+                      <app-color-swatch [color]="swatch(wool)" />
                       {{ wool.name }} <span class="muted">· {{ wool.woolType }} · {{ wool.weightGrams | grams }}</span>
                     </span>
                   </mat-option>
