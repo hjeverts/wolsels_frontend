@@ -285,13 +285,18 @@ export class WoolForm implements OnInit {
   protected readonly photos = signal<PhotoItem[]>([]);
   protected readonly processing = signal(false);
   private pendingKey = 0;
+  /** Formulier gesloten: een lopende verwerking van foto's stopt dan (geen nieuwe voorbeelden of uploads). */
+  private destroyed = false;
 
   /** Het bolletje volgt de kleurnaam, tot je zelf een kleur kiest. */
   protected readonly autoColor = new AutoColor(this.form.controls.color, this.form.controls.colorHex);
   protected readonly swatch = (w: Wool) => swatchColor(w.colorHex, w.color);
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.photos().forEach((p) => this.revoke(p)));
+    inject(DestroyRef).onDestroy(() => {
+      this.destroyed = true;
+      this.photos().forEach((p) => this.revoke(p));
+    });
   }
 
   private readonly existingTypes = computed(() => [...new Set(this.allWools().map((w) => w.woolType))]);
@@ -354,7 +359,9 @@ export class WoolForm implements OnInit {
     this.processing.set(true);
     try {
       for (const file of files) {
+        if (this.destroyed) return;
         const resized = await resizePhoto(file);
+        if (this.destroyed) return;
         const id = this.id();
         if (id) {
           const photoId = await new Promise<number>((resolve, reject) =>
