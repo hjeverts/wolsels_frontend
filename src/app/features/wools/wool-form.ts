@@ -106,14 +106,14 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
             <button type="button" class="thumb" (click)="openPhoto(p)" [attr.aria-label]="'Foto ' + ($index + 1) + ' vergroten'">
               <img [src]="thumbnailUrl(p)" alt="" loading="lazy" />
             </button>
-            <button mat-icon-button type="button" class="remove" (click)="removePhoto(p)" aria-label="Foto verwijderen">
+            <button mat-icon-button type="button" class="remove" (click)="removePhoto(p)" [disabled]="saving()" aria-label="Foto verwijderen">
               <mat-icon>close</mat-icon>
             </button>
           </div>
         }
         @if (photos().length < maxPhotos) {
           <input #photoInput type="file" accept="image/*" multiple hidden (change)="addPhotos(photoInput)" />
-          <button type="button" class="add" (click)="photoInput.click()" [disabled]="processing()">
+          <button type="button" class="add" (click)="photoInput.click()" [disabled]="processing() || saving()">
             @if (processing()) {
               <mat-spinner diameter="28" />
             } @else {
@@ -136,7 +136,7 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
         }
         <span class="spacer"></span>
         <a mat-button routerLink="/voorraad">Annuleren</a>
-        <button mat-flat-button type="submit" [disabled]="saving()">Opslaan</button>
+        <button mat-flat-button type="submit" [disabled]="saving() || processing()">Opslaan</button>
       </div>
     </form>
 
@@ -333,11 +333,21 @@ export class WoolForm implements OnInit {
 
   protected openPhoto(p: PhotoItem): void {
     const src = p.kind === 'saved' ? this.api.wools.photoUrl(+this.id()!, p.id) : p.photoUrl;
-    this.dialog.open(PhotoDialog, { data: { src, alt: this.form.controls.name.value }, maxWidth: '95vw' });
+    const name = this.form.controls.name.value.trim();
+    this.dialog.open(PhotoDialog, {
+      data: { src, alt: name },
+      ariaLabel: name ? `Foto van ${name}` : 'Foto',
+      maxWidth: '95vw',
+    });
   }
 
   /** Verkleint de gekozen foto's; bij een bestaande partij worden ze meteen geüpload. */
   protected async addPhotos(input: HTMLInputElement): Promise<void> {
+    // Tijdens het opslaan ligt vast welke foto's worden geüpload.
+    if (this.saving()) {
+      input.value = '';
+      return;
+    }
     const files = [...(input.files ?? [])].slice(0, MAX_PHOTOS - this.photos().length);
     input.value = '';
     if (!files.length) return;
@@ -371,6 +381,7 @@ export class WoolForm implements OnInit {
   }
 
   protected removePhoto(p: PhotoItem): void {
+    if (this.saving()) return;
     if (p.kind === 'pending') {
       this.revoke(p);
       this.photos.update((list) => list.filter((x) => x !== p));
@@ -402,6 +413,8 @@ export class WoolForm implements OnInit {
   }
 
   protected save(): void {
+    // Wachten tot gekozen foto's verkleind zijn, en niet twee keer opslaan.
+    if (this.saving() || this.processing()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
