@@ -57,6 +57,12 @@ symbool uit het logo, op de themakleur). Opnieuw genereren: `./icons-src/generat
 
 ## Docker
 
+GitHub Actions (`.github/workflows/image.yml`) draait bij elke push naar `main` de tests en zet de
+image op `ghcr.io/hjeverts/wolsels-frontend` (tags `latest`, `sha-<commit>` en bij een git-tag `v1.2.3`
+ook `1.2.3` en `1.2`). Elke maandag wordt hij opnieuw gebouwd voor updates van de base-image.
+
+Zelf bouwen:
+
 ```sh
 docker build -t wolsels-frontend .
 docker run -p 8080:8080 -e API_UPSTREAM=http://<backend-host>:8080 wolsels-frontend
@@ -71,3 +77,7 @@ De nginx-configuratie (`nginx/default.conf.template`) zet beveiligingsheaders, w
 Content-Security-Policy (daarom staat het inlinen van kritieke CSS uit in `angular.json`). Het client-IP
 wordt alleen van proxies op interne netwerken overgenomen, zodat de pogingslimieten van de backend niet
 te omzeilen zijn met een vervalste `X-Forwarded-For`.
+
+## Licentie
+
+[MIT](LICENSE) © 2026 Hans Everts
