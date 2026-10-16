@@ -100,6 +100,37 @@ export interface Animal {
 
 export type AnimalRequest = Omit<Animal, 'id' | 'locationName' | 'totalHarvestedGrams' | 'lastHarvestDate'>;
 
+/** Velden die bij het importeren van bestaande dieren bijgewerkt kunnen worden. */
+export type AnimalImportField = 'species' | 'breed' | 'color' | 'birthDate' | 'location' | 'active' | 'notes';
+
+export interface AnimalImportRow {
+  line: number;
+  name: string;
+  species: string;
+  breed: string;
+  color: string;
+  birthDate: string | null;
+  /** Naam van de locatie; een onbekende locatie wordt aangemaakt. */
+  location: string;
+  /** Leeg: een nieuw dier is actief, een bestaand dier blijft ongewijzigd. */
+  active: boolean | null;
+  notes: string;
+}
+
+export interface AnimalImportRequest {
+  rows: AnimalImportRow[];
+  fields: AnimalImportField[];
+  updateExisting: boolean;
+  defaultSpecies: string | null;
+}
+
+export interface AnimalImportResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  locationsCreated: string[];
+}
+
 export interface Harvest {
   id: number;
   date: string;

@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, shareReplay } from 'rxjs';
 import {
   Animal,
+  AnimalImportRequest,
+  AnimalImportResult,
   AnimalRequest,
   Blend,
   BlendRequest,
@@ -48,6 +50,13 @@ class WoolResource extends Resource<Wool, WoolRequest> {
   }
 }
 
+class AnimalResource extends Resource<Animal, AnimalRequest> {
+  /** Importeert dieren in één keer; bij een fout wordt niets opgeslagen. */
+  import(request: AnimalImportRequest): Observable<AnimalImportResult> {
+    return this.http.post<AnimalImportResult>(`${this.url}/import`, request);
+  }
+}
+
 class HarvestResource extends Resource<Harvest, HarvestRequest> {
   deleteHarvest(id: number, removeFromStock: boolean): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`, { params: { removeFromStock } });
@@ -67,7 +76,7 @@ export class ApiService {
   readonly wools = new WoolResource(this.http, '/api/wools');
   readonly blends = new Resource<Blend, BlendRequest>(this.http, '/api/blends');
   readonly locations = new Resource<Location, LocationRequest>(this.http, '/api/locations');
-  readonly animals = new Resource<Animal, AnimalRequest>(this.http, '/api/animals');
+  readonly animals = new AnimalResource(this.http, '/api/animals');
   readonly harvests = new HarvestResource(this.http, '/api/harvests');
 
   readonly settings$: Observable<Settings> = this.http

@@ -2,20 +2,36 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { Animal } from '../../core/models';
+import { downloadCsv } from '../../shared/csv';
+import { today } from '../../shared/form-utils';
 import { GramsPipe } from '../../shared/grams.pipe';
+import { animalsToCsv } from './animal-csv';
 
 @Component({
   selector: 'app-animal-list',
-  imports: [RouterLink, DatePipe, MatButtonModule, MatIconModule, MatSlideToggleModule, MatTableModule, GramsPipe],
+  imports: [RouterLink, DatePipe, MatButtonModule, MatIconModule, MatMenuModule, MatSlideToggleModule, MatTableModule, GramsPipe],
   template: `
     <div class="page-header">
       <h1>Dieren</h1>
-      <a mat-flat-button routerLink="/dieren/nieuw"><mat-icon>add</mat-icon> Dier toevoegen</a>
+      <div class="actions">
+        <a mat-stroked-button routerLink="/dieren/importeren"><mat-icon>upload</mat-icon> Importeren</a>
+        <button mat-stroked-button type="button" [matMenuTriggerFor]="exportMenu">
+          <mat-icon>download</mat-icon> Exporteren
+        </button>
+        <mat-menu #exportMenu>
+          <button mat-menu-item type="button" (click)="exportAll()" [disabled]="!animals()?.length">
+            Alle dieren (CSV)
+          </button>
+          <button mat-menu-item type="button" (click)="exportTemplate()">Leeg sjabloon (CSV)</button>
+        </mat-menu>
+        <a mat-flat-button routerLink="/dieren/nieuw"><mat-icon>add</mat-icon> Dier toevoegen</a>
+      </div>
     </div>
 
     @if (animals(); as all) {
@@ -72,6 +88,11 @@ import { GramsPipe } from '../../shared/grams.pipe';
     .toggle {
       margin-bottom: 12px;
     }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
   `,
 })
 export class AnimalList {
@@ -86,6 +107,15 @@ export class AnimalList {
 
   constructor() {
     this.api.animals.list().subscribe((animals) => this.animals.set(animals));
+  }
+
+  /** Alle dieren, ook inactieve; het bestand kan na bewerken weer geïmporteerd worden. */
+  protected exportAll(): void {
+    downloadCsv(`wolsels-dieren-${today()}.csv`, animalsToCsv(this.animals() ?? []));
+  }
+
+  protected exportTemplate(): void {
+    downloadCsv('wolsels-dieren-sjabloon.csv', animalsToCsv());
   }
 
   protected open(animal: Animal): void {
