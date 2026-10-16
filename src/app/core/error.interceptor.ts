@@ -39,6 +39,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
 function describe(error: HttpErrorResponse): string {
   if (error.status === 0) return 'De server is niet bereikbaar.';
+  // Door nginx geweigerd, dus zonder ProblemDetails.
+  if (error.status === 413) return 'Dit bestand is te groot om te uploaden.';
   const problem = error.error as { title?: string; errors?: Record<string, string[]> } | null;
   const details = problem?.errors ? Object.values(problem.errors).flat() : [];
   if (details.length) return details.join(' ');

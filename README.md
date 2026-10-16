@@ -21,7 +21,7 @@ npm run build
 
 | Route         | Inhoud                                                                    |
 |---------------|---------------------------------------------------------------------------|
-| `/voorraad`   | Wolvoorraad: naam, wolsoort, kleur (+ kleurcode), gewicht, herkomst       |
+| `/voorraad`   | Wolvoorraad: naam, wolsoort, kleur (bolletje volgt de kleurnaam, of zelf kiezen), gewicht, herkomst, tot 10 foto's (in de browser verkleind tot 1600 px, zonder EXIF/GPS) |
 | `/mengsels`   | Mengsels met verhouding, input/output, opbrengst %, garen- en verfgegevens |
 | `/productie`  | Oogsten ruwe wol, totalen per maand en per dier/locatie                   |
 | `/dieren`     | Dieren (bv. angorakonijnen) met locatie en totale opbrengst               |

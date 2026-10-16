@@ -9,9 +9,11 @@ export interface Wool {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Foto's, oudste eerst; de URL komt van ApiService.wools.photoUrl. */
+  photoIds: number[];
 }
 
-export type WoolRequest = Omit<Wool, 'id' | 'createdAt' | 'updatedAt'>;
+export type WoolRequest = Omit<Wool, 'id' | 'createdAt' | 'updatedAt' | 'photoIds'>;
 
 export type CalculationBasis = 'TotalWeight' | 'ComponentWeight';
 export type BlendStatus = 'Planned' | 'Spun';
