@@ -1,30 +1,29 @@
 <div class="page-header">
-  <h1>Account</h1>
+  <h1>{{ 'account.title' | t }}</h1>
   <span class="muted">{{ auth.user()?.email }}</span>
 </div>
 
 @if (welkom() && !auth.user()?.twoFactorEnabled) {
   <p class="welcome">
-    <mat-icon inline>waving_hand</mat-icon> Welkom bij Wolsels! Zet tweestapsverificatie aan om je account extra te beveiligen.
+    <mat-icon inline>waving_hand</mat-icon> {{ 'account.welcome' | t }}
   </p>
 }
 
 <mat-card appearance="outlined" class="section">
   <mat-card-content>
     <h2 class="section-title">
-      <mat-icon>phonelink_lock</mat-icon> Tweestapsverificatie (2FA)
+      <mat-icon>phonelink_lock</mat-icon> {{ 'account.twoFactorTitle' | t }}
       @if (auth.user()?.twoFactorEnabled) {
-        <span class="badge on">Aan</span>
+        <span class="badge on">{{ 'common.on' | t }}</span>
       } @else {
-        <span class="badge off">Uit</span>
+        <span class="badge off">{{ 'common.off' | t }}</span>
       }
     </h2>
 
     @if (recoveryCodes(); as codes) {
       <div class="recovery">
         <p>
-          <strong>Bewaar deze herstelcodes op een veilige plek.</strong> Ben je je telefoon kwijt, dan log je
-          hiermee in. Elke code werkt één keer; ze worden niet opnieuw getoond.
+          <strong>{{ 'account.saveCodes' | t }}</strong> {{ 'account.saveCodesDetail' | t }}
         </p>
         <ul class="codes">
           @for (c of codes; track c) {
@@ -32,49 +31,48 @@
           }
         </ul>
         <div class="form-actions">
-          <button mat-stroked-button type="button" (click)="downloadRecoveryCodes()"><mat-icon>download</mat-icon> Downloaden</button>
-          <button mat-flat-button type="button" (click)="recoveryCodes.set(null)">Ik heb ze bewaard</button>
+          <button mat-stroked-button type="button" (click)="downloadRecoveryCodes()"><mat-icon>download</mat-icon> {{ 'common.download' | t }}</button>
+          <button mat-flat-button type="button" (click)="recoveryCodes.set(null)">{{ 'account.codesSaved' | t }}</button>
         </div>
       </div>
     } @else if (setup(); as s) {
       <ol class="steps">
-        <li>Open een authenticator-app (bv. Google Authenticator, Microsoft Authenticator, Aegis of 1Password).</li>
+        <li>{{ 'account.setupStep1' | t }}</li>
         <li>
-          Scan deze QR-code, of voer de sleutel handmatig in:
+          {{ 'account.setupStep2' | t }}
           <div class="qr">
-            <img [src]="s.qr" alt="QR-code voor je authenticator-app" width="220" height="220" />
+            <img [src]="s.qr" [alt]="'account.qrAlt' | t" width="220" height="220" />
             <code class="key">{{ s.sharedKey }}</code>
           </div>
         </li>
-        <li>Vul de 6-cijferige code in die de app toont.</li>
+        <li>{{ 'account.setupStep3' | t }}</li>
       </ol>
       <form [formGroup]="codeForm" (ngSubmit)="enable()" class="code-form">
         <mat-form-field>
-          <mat-label>Code</mat-label>
+          <mat-label>{{ 'login.code' | t }}</mat-label>
           <input matInput formControlName="code" inputmode="numeric" autocomplete="one-time-code" required />
         </mat-form-field>
-        <button mat-flat-button type="submit" [disabled]="busy()">Inschakelen</button>
-        <button mat-button type="button" (click)="cancelSetup()">Annuleren</button>
+        <button mat-flat-button type="submit" [disabled]="busy()">{{ 'account.enable' | t }}</button>
+        <button mat-button type="button" (click)="cancelSetup()">{{ 'common.cancel' | t }}</button>
       </form>
     } @else if (auth.user()?.twoFactorEnabled) {
       <p>
-        Bij het inloggen vragen we naast je wachtwoord een code uit je authenticator-app.
-        Je hebt nog <strong>{{ auth.user()?.recoveryCodesLeft }}</strong> herstelcodes.
+        {{ 'account.twoFactorOn' | t }}
+        {{ 'account.recoveryCodesLeft' | t: { count: auth.user()?.recoveryCodesLeft ?? 0 } }}
       </p>
       @if ((auth.user()?.recoveryCodesLeft ?? 0) < 3) {
-        <p class="warn"><mat-icon inline>warning</mat-icon> Je hebt bijna geen herstelcodes meer. Maak nieuwe aan.</p>
+        <p class="warn"><mat-icon inline>warning</mat-icon> {{ 'account.fewCodesLeft' | t }}</p>
       }
       <div class="form-actions start">
-        <button mat-stroked-button type="button" (click)="newRecoveryCodes()"><mat-icon>key</mat-icon> Nieuwe herstelcodes</button>
-        <button mat-button type="button" (click)="disable()">Uitschakelen</button>
+        <button mat-stroked-button type="button" (click)="newRecoveryCodes()"><mat-icon>key</mat-icon> {{ 'account.newCodes' | t }}</button>
+        <button mat-button type="button" (click)="disable()">{{ 'account.disable' | t }}</button>
       </div>
     } @else {
       <p>
-        Met tweestapsverificatie heb je naast je wachtwoord ook een code uit een app op je telefoon nodig.
-        Zo kan niemand inloggen met alleen je wachtwoord.
+        {{ 'account.twoFactorIntro' | t }}
       </p>
       <div class="form-actions start">
-        <button mat-flat-button type="button" (click)="startSetup()"><mat-icon>add_moderator</mat-icon> 2FA instellen</button>
+        <button mat-flat-button type="button" (click)="startSetup()"><mat-icon>add_moderator</mat-icon> {{ 'account.setupTwoFactor' | t }}</button>
       </div>
     }
 
@@ -86,29 +84,47 @@
 
 <mat-card appearance="outlined" class="section">
   <mat-card-content>
-    <h2 class="section-title"><mat-icon>password</mat-icon> Wachtwoord wijzigen</h2>
+    <h2 class="section-title"><mat-icon>translate</mat-icon> {{ 'account.languageTitle' | t }}</h2>
+    <mat-form-field subscriptSizing="dynamic" class="language">
+      <mat-label>{{ 'account.language' | t }}</mat-label>
+      <mat-select [value]="language()" (selectionChange)="changeLanguage($event.value)" [disabled]="busy()">
+        @for (l of languages; track l.code) {
+          <mat-option [value]="l.code">{{ l.name }}</mat-option>
+        }
+      </mat-select>
+      <mat-hint>{{ 'account.languageHint' | t }}</mat-hint>
+    </mat-form-field>
+    @if (languageError()) {
+      <p class="error" role="alert">{{ languageError() }}</p>
+    }
+  </mat-card-content>
+</mat-card>
+
+<mat-card appearance="outlined" class="section">
+  <mat-card-content>
+    <h2 class="section-title"><mat-icon>password</mat-icon> {{ 'account.changePassword' | t }}</h2>
     <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="form-grid">
       <mat-form-field class="span-all">
-        <mat-label>Huidig wachtwoord</mat-label>
+        <mat-label>{{ 'account.currentPassword' | t }}</mat-label>
         <input matInput type="password" formControlName="oldPassword" autocomplete="current-password" required />
       </mat-form-field>
       <mat-form-field subscriptSizing="dynamic">
-        <mat-label>Nieuw wachtwoord</mat-label>
+        <mat-label>{{ 'auth.newPassword' | t }}</mat-label>
         <input matInput type="password" formControlName="password" autocomplete="new-password" required />
-        <mat-hint>Minimaal {{ minLength }} tekens.</mat-hint>
+        <mat-hint>{{ 'auth.minLength' | t: { min: minLength } }}</mat-hint>
       </mat-form-field>
       <mat-form-field>
-        <mat-label>Nieuw wachtwoord herhalen</mat-label>
+        <mat-label>{{ 'auth.confirmNewPassword' | t }}</mat-label>
         <input matInput type="password" formControlName="confirm" autocomplete="new-password" required />
       </mat-form-field>
       @if (passwordForm.hasError('mismatch') && passwordForm.controls.confirm.touched) {
-        <p class="error span-all">De wachtwoorden zijn niet gelijk.</p>
+        <p class="error span-all">{{ 'auth.passwordsDiffer' | t }}</p>
       }
       @if (passwordError()) {
         <p class="error span-all" role="alert">{{ passwordError() }}</p>
       }
       <div class="form-actions span-all">
-        <button mat-flat-button type="submit">Wachtwoord wijzigen</button>
+        <button mat-flat-button type="submit">{{ 'account.changePassword' | t }}</button>
       </div>
     </form>
   </mat-card-content>

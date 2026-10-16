@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { Blend, BlendStatus } from '../../core/models';
 import { swatchColor } from '../../shared/color-names';
 import { ColorSwatch } from '../../shared/color-swatch';
@@ -25,31 +26,32 @@ import { GramsPipe } from '../../shared/grams.pipe';
     MatTableModule,
     ColorSwatch,
     GramsPipe,
+    TranslatePipe,
   ],
   template: `
     <div class="page-header">
-      <h1>Mengsels</h1>
-      <a mat-flat-button routerLink="/mengsels/nieuw"><mat-icon>add</mat-icon> Nieuw mengsel</a>
+      <h1>{{ 'nav.blends' | t }}</h1>
+      <a mat-flat-button routerLink="/mengsels/nieuw"><mat-icon>add</mat-icon> {{ 'blends.new' | t }}</a>
     </div>
 
     @if (blends(); as all) {
       @if (all.length) {
         <mat-button-toggle-group [value]="statusFilter()" (change)="statusFilter.set($event.value)" class="status-filter"
-          hideSingleSelectionIndicator aria-label="Filter op status">
-          <mat-button-toggle value="all">Alle</mat-button-toggle>
-          <mat-button-toggle value="Planned">Gepland</mat-button-toggle>
-          <mat-button-toggle value="Spun">Gesponnen</mat-button-toggle>
+          hideSingleSelectionIndicator [attr.aria-label]="'blends.filterStatus' | t">
+          <mat-button-toggle value="all">{{ 'blends.all' | t }}</mat-button-toggle>
+          <mat-button-toggle value="Planned">{{ 'blends.planned' | t }}</mat-button-toggle>
+          <mat-button-toggle value="Spun">{{ 'blends.spun' | t }}</mat-button-toggle>
         </mat-button-toggle-group>
 
         <div class="table-wrap">
           <table mat-table [dataSource]="filtered()">
             <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Mengsel</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'blends.blend' | t }}</th>
               <td mat-cell *matCellDef="let b">
                 <div class="name">
                   {{ b.name }}
                   @if (b.status === 'Spun') {
-                    <mat-icon inline class="spun" title="Gesponnen">check_circle</mat-icon>
+                    <mat-icon inline class="spun" [title]="'blends.spun' | t">check_circle</mat-icon>
                   }
                 </div>
                 <div class="ratio-bar" [title]="describe(b)">
@@ -60,15 +62,15 @@ import { GramsPipe } from '../../shared/grams.pipe';
               </td>
             </ng-container>
             <ng-container matColumnDef="ratio">
-              <th mat-header-cell *matHeaderCellDef>Verhouding</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'blends.ratio' | t }}</th>
               <td mat-cell *matCellDef="let b" class="muted">{{ describe(b) }}</td>
             </ng-container>
             <ng-container matColumnDef="input">
-              <th mat-header-cell *matHeaderCellDef class="num">Input</th>
+              <th mat-header-cell *matHeaderCellDef class="num">{{ 'blends.input' | t }}</th>
               <td mat-cell *matCellDef="let b" class="num">{{ b.inputWeightGrams | grams }}</td>
             </ng-container>
             <ng-container matColumnDef="output">
-              <th mat-header-cell *matHeaderCellDef class="num">Output</th>
+              <th mat-header-cell *matHeaderCellDef class="num">{{ 'blends.output' | t }}</th>
               <td mat-cell *matCellDef="let b" class="num">
                 {{ b.outputWeightGrams | grams }}
                 @if (b.yieldPercentage !== null) {
@@ -77,7 +79,7 @@ import { GramsPipe } from '../../shared/grams.pipe';
               </td>
             </ng-container>
             <ng-container matColumnDef="yarn">
-              <th mat-header-cell *matHeaderCellDef>Garen</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'blends.yarn' | t }}</th>
               <td mat-cell *matCellDef="let b">
                 <span class="inline">
                   @if (b.isDyed) {
@@ -88,18 +90,18 @@ import { GramsPipe } from '../../shared/grams.pipe';
               </td>
             </ng-container>
             <ng-container matColumnDef="date">
-              <th mat-header-cell *matHeaderCellDef>Gesponnen</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'blends.spun' | t }}</th>
               <td mat-cell *matCellDef="let b" class="muted">{{ b.spunOn | date: 'd MMM y' }}</td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="columns"></tr>
             <tr mat-row *matRowDef="let b; columns: columns" class="clickable" (click)="open(b)"></tr>
           </table>
           @if (!filtered().length) {
-            <div class="empty">Geen mengsels met deze status.</div>
+            <div class="empty">{{ 'blends.noneWithStatus' | t }}</div>
           }
         </div>
       } @else {
-        <div class="empty">Nog geen mengsels. Maak je eerste mengsel aan.</div>
+        <div class="empty">{{ 'blends.empty' | t }}</div>
       }
     }
   `,
@@ -154,7 +156,7 @@ export class BlendList {
   }
 
   protected yarn(blend: Blend): string {
-    return [blend.yarnWeight, blend.plyMethod ?? (blend.plyCount ? `${blend.plyCount}-draads` : null), blend.isDyed ? blend.dyeColor : null]
+    return [blend.yarnWeight, blend.plyMethod ?? (blend.plyCount ? t('blends.plyCount', { count: blend.plyCount }) : null), blend.isDyed ? blend.dyeColor : null]
       .filter(Boolean)
       .join(', ');
   }

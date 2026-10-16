@@ -1,6 +1,4 @@
-import { registerLocaleData } from '@angular/common';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import localeNl from '@angular/common/locales/nl';
 import {
   ApplicationConfig,
   LOCALE_ID,
@@ -10,19 +8,21 @@ import {
 } from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatIconRegistry } from '@angular/material/icon';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { TitleStrategy, provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { errorInterceptor } from './core/error.interceptor';
 import { householdInterceptor } from './core/household.interceptor';
-
-registerLocaleData(localeNl);
+import { currentLocale } from './core/i18n/i18n';
+import { languageInterceptor } from './core/i18n/language.interceptor';
+import { TranslatedTitleStrategy } from './core/i18n/title-strategy';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([householdInterceptor, errorInterceptor])),
-    { provide: LOCALE_ID, useValue: 'nl-NL' },
+    { provide: TitleStrategy, useClass: TranslatedTitleStrategy },
+    provideHttpClient(withInterceptors([languageInterceptor, householdInterceptor, errorInterceptor])),
+    { provide: LOCALE_ID, useFactory: currentLocale },
     provideAppInitializer(() => {
       inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');
     }),

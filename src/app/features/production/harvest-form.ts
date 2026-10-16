@@ -13,9 +13,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { EMPTY, combineLatest, forkJoin, of, startWith, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { Animal, Harvest, Location, Wool } from '../../core/models';
 import { GramsPipe } from '../../shared/grams.pipe';
-import { HARVEST_GRADES, HARVEST_METHODS } from '../../core/yarn';
+import { harvestGrades, harvestMethods } from '../../core/yarn';
 import { ConfirmService } from '../../shared/confirm.service';
 import { emptyToNull, toNumber, today } from '../../shared/form-utils';
 
@@ -35,43 +36,45 @@ type Source = 'animal' | 'location';
     MatInputModule,
     MatSelectModule,
     GramsPipe,
+    TranslatePipe,
   ],
   template: `
     <div class="page-header">
-      <h1>{{ id() ? 'Oogst bewerken' : 'Oogst registreren' }}</h1>
+      <h1>{{ (id() ? 'harvest.edit' : 'production.register') | t }}</h1>
     </div>
 
     @if (loaded()) {
       @if (!animals().length && !locations().length) {
         <div class="empty">
-          Je hebt nog geen dieren of locaties. Maak eerst een <a routerLink="/dieren/nieuw">dier</a> of een
-          <a routerLink="/locaties">locatie</a> aan.
+          {{ 'harvest.noSources' | t }}
+          <a routerLink="/dieren/nieuw">{{ 'animals.add' | t }}</a> ·
+          <a routerLink="/locaties">{{ 'animals.manageLocations' | t }}</a>
         </div>
       } @else {
         <form [formGroup]="form" (ngSubmit)="save()">
           <div class="source-toggle">
-            <span class="muted">Geoogst van</span>
-            <mat-button-toggle-group formControlName="source" aria-label="Bron" hideSingleSelectionIndicator>
-              <mat-button-toggle value="animal" [disabled]="!animals().length"><mat-icon>cruelty_free</mat-icon> Dier</mat-button-toggle>
-              <mat-button-toggle value="location" [disabled]="!locations().length"><mat-icon>location_on</mat-icon> Locatie</mat-button-toggle>
+            <span class="muted">{{ 'harvest.harvestedFrom' | t }}</span>
+            <mat-button-toggle-group formControlName="source" [attr.aria-label]="'harvest.source' | t" hideSingleSelectionIndicator>
+              <mat-button-toggle value="animal" [disabled]="!animals().length"><mat-icon>cruelty_free</mat-icon> {{ 'harvest.animal' | t }}</mat-button-toggle>
+              <mat-button-toggle value="location" [disabled]="!locations().length"><mat-icon>location_on</mat-icon> {{ 'harvest.location' | t }}</mat-button-toggle>
             </mat-button-toggle-group>
           </div>
 
           <div class="form-grid">
             @if (source() === 'animal') {
               <mat-form-field>
-                <mat-label>Dier</mat-label>
+                <mat-label>{{ 'harvest.animal' | t }}</mat-label>
                 <mat-select formControlName="animalId" required>
                   @for (a of selectableAnimals(); track a.id) {
                     <mat-option [value]="a.id">
-                      {{ a.name }} <span class="muted">· {{ a.breed ?? a.species }}{{ a.active ? '' : ' (inactief)' }}</span>
+                      {{ a.name }} <span class="muted">· {{ a.breed ?? a.species }}{{ a.active ? '' : ' ' + ('harvest.inactive' | t) }}</span>
                     </mat-option>
                   }
                 </mat-select>
               </mat-form-field>
             } @else {
               <mat-form-field>
-                <mat-label>Locatie</mat-label>
+                <mat-label>{{ 'harvest.location' | t }}</mat-label>
                 <mat-select formControlName="locationId" required>
                   @for (l of locations(); track l.id) {
                     <mat-option [value]="l.id">{{ l.name }}</mat-option>
@@ -81,18 +84,18 @@ type Source = 'animal' | 'location';
             }
 
             <mat-form-field>
-              <mat-label>Datum</mat-label>
+              <mat-label>{{ 'common.date' | t }}</mat-label>
               <input matInput type="date" formControlName="date" required />
             </mat-form-field>
 
             <mat-form-field>
-              <mat-label>Gewicht ruwe wol</mat-label>
+              <mat-label>{{ 'harvest.rawWeight' | t }}</mat-label>
               <input matInput type="number" min="0.1" step="0.1" formControlName="weightGrams" required />
               <span matTextSuffix>g</span>
             </mat-form-field>
 
             <mat-form-field>
-              <mat-label>Methode</mat-label>
+              <mat-label>{{ 'harvest.method' | t }}</mat-label>
               <input matInput formControlName="method" [matAutocomplete]="methods" />
               <mat-autocomplete #methods>
                 @for (m of methodOptions; track m) {
@@ -102,7 +105,7 @@ type Source = 'animal' | 'location';
             </mat-form-field>
 
             <mat-form-field>
-              <mat-label>Kwaliteit</mat-label>
+              <mat-label>{{ 'harvest.grade' | t }}</mat-label>
               <input matInput formControlName="grade" [matAutocomplete]="grades" />
               <mat-autocomplete #grades>
                 @for (g of gradeOptions; track g) {
@@ -112,37 +115,37 @@ type Source = 'animal' | 'location';
             </mat-form-field>
 
             <mat-form-field class="span-all">
-              <mat-label>Notities</mat-label>
+              <mat-label>{{ 'common.notes' | t }}</mat-label>
               <textarea matInput formControlName="notes" rows="3"></textarea>
             </mat-form-field>
           </div>
 
           <div class="stock">
-            <h2 class="section-title"><mat-icon>inventory_2</mat-icon> Voorraad</h2>
+            <h2 class="section-title"><mat-icon>inventory_2</mat-icon> {{ 'nav.stock' | t }}</h2>
             @if (woolId()) {
               <p>
-                Deze oogst zit in de voorraadpartij
+                {{ 'harvest.inLot' | t }}
                 <a [routerLink]="['/voorraad', woolId()]">{{ woolName() }}</a>.
-                <span class="muted">Pas je het gewicht aan, dan wordt het verschil met de partij verrekend.</span>
+                <span class="muted">{{ 'harvest.weightAdjusts' | t }}</span>
               </p>
             } @else {
-              <mat-radio-group formControlName="stockMode" class="stock-modes" aria-label="Voorraad">
-                <mat-radio-button value="none">Niet aan de voorraad toevoegen</mat-radio-button>
-                <mat-radio-button value="new">Als nieuwe partij toevoegen</mat-radio-button>
-                <mat-radio-button value="existing" [disabled]="!wools().length">Bijtellen bij een bestaande partij</mat-radio-button>
+              <mat-radio-group formControlName="stockMode" class="stock-modes" [attr.aria-label]="'nav.stock' | t">
+                <mat-radio-button value="none">{{ 'harvest.stockNone' | t }}</mat-radio-button>
+                <mat-radio-button value="new">{{ 'harvest.stockNew' | t }}</mat-radio-button>
+                <mat-radio-button value="existing" [disabled]="!wools().length">{{ 'harvest.stockExisting' | t }}</mat-radio-button>
               </mat-radio-group>
               @if (stockMode() === 'existing') {
                 <mat-form-field class="stock-wool">
-                  <mat-label>Partij</mat-label>
+                  <mat-label>{{ 'harvest.lot' | t }}</mat-label>
                   <mat-select formControlName="stockWoolId" required>
                     @if (suggestedWools().length) {
-                      <mat-optgroup [label]="source() === 'animal' ? 'Eerder gebruikt voor dit dier' : 'Eerder gebruikt voor deze locatie'">
+                      <mat-optgroup [label]="(source() === 'animal' ? 'harvest.usedForAnimal' : 'harvest.usedForLocation') | t">
                         @for (w of suggestedWools(); track w.id) {
                           <mat-option [value]="w.id">{{ w.name }} <span class="muted">· {{ w.weightGrams | grams }}</span></mat-option>
                         }
                       </mat-optgroup>
                     }
-                    <mat-optgroup label="Alle partijen">
+                    <mat-optgroup [label]="'harvest.allLots' | t">
                       @for (w of otherWools(); track w.id) {
                         <mat-option [value]="w.id">{{ w.name }} <span class="muted">· {{ w.woolType }} · {{ w.weightGrams | grams }}</span></mat-option>
                       }
@@ -155,11 +158,11 @@ type Source = 'animal' | 'location';
 
           <div class="form-actions">
             @if (id()) {
-              <button mat-button type="button" (click)="remove()"><mat-icon>delete</mat-icon> Verwijderen</button>
+              <button mat-button type="button" (click)="remove()"><mat-icon>delete</mat-icon> {{ 'common.delete' | t }}</button>
             }
             <span class="spacer"></span>
-            <a mat-button routerLink="/productie">Annuleren</a>
-            <button mat-flat-button type="submit" [disabled]="saving()">Opslaan</button>
+            <a mat-button routerLink="/productie">{{ 'common.cancel' | t }}</a>
+            <button mat-flat-button type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
           </div>
         </form>
       }
@@ -195,8 +198,8 @@ export class HarvestForm implements OnInit {
 
   readonly id = input<string>();
 
-  protected readonly methodOptions = HARVEST_METHODS;
-  protected readonly gradeOptions = HARVEST_GRADES;
+  protected readonly methodOptions = harvestMethods();
+  protected readonly gradeOptions = harvestGrades();
   protected readonly animals = signal<Animal[]>([]);
   protected readonly locations = signal<Location[]>([]);
   protected readonly loaded = signal(false);
@@ -332,15 +335,15 @@ export class HarvestForm implements OnInit {
     const weight = this.form.controls.weightGrams.value;
     const choice$ = this.woolId()
       ? this.confirm.choose(
-          'Oogst verwijderen',
-          `Deze oogst zit in de voorraadpartij "${this.woolName()}". Moet het gewicht (${weight} g) ook van die partij af?`,
+          t('harvest.deleteTitle'),
+          t('harvest.deleteFromLot', { lot: this.woolName(), weight }),
           [
-            { label: 'Alleen de oogst verwijderen', value: 'keep' as const },
-            { label: 'Ook van de voorraad afhalen', value: 'remove' as const },
+            { label: t('harvest.deleteKeepStock'), value: 'keep' as const },
+            { label: t('harvest.deleteRemoveStock'), value: 'remove' as const },
           ],
         )
       : this.confirm
-          .ask('Oogst verwijderen', 'Weet je zeker dat je deze oogst wilt verwijderen?')
+          .ask(t('harvest.deleteTitle'), t('harvest.deleteConfirm'))
           .pipe(switchMap((ok) => (ok ? of('keep' as const) : of(null))));
 
     choice$

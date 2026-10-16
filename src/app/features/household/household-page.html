@@ -3,37 +3,36 @@
     @if (editingName()) {
       <form [formGroup]="nameForm" (ngSubmit)="rename()" class="rename">
         <mat-form-field subscriptSizing="dynamic">
-          <mat-label>Naam van het huishouden</mat-label>
+          <mat-label>{{ 'household.name' | t }}</mat-label>
           <input matInput formControlName="name" required />
         </mat-form-field>
-        <button mat-flat-button type="submit">Opslaan</button>
-        <button mat-button type="button" (click)="editingName.set(false)">Annuleren</button>
+        <button mat-flat-button type="submit">{{ 'common.save' | t }}</button>
+        <button mat-button type="button" (click)="editingName.set(false)">{{ 'common.cancel' | t }}</button>
       </form>
     } @else {
       <h1>
         {{ h.name }}
-        <button mat-icon-button (click)="startRename()" aria-label="Naam wijzigen" matTooltip="Naam wijzigen">
+        <button mat-icon-button (click)="startRename()" [attr.aria-label]="'household.rename' | t" [matTooltip]="'household.rename' | t">
           <mat-icon>edit</mat-icon>
         </button>
       </h1>
     }
   </div>
   <p class="muted">
-    Iedereen in dit huishouden ziet en bewerkt dezelfde wol, mengsels, dieren, locaties en oogsten.
-    Ieder heeft een eigen login, wachtwoord en tweestapsverificatie.
+    {{ 'household.intro' | t }}
   </p>
 
   <mat-card appearance="outlined" class="section">
     <mat-card-content>
-      <h2 class="section-title"><mat-icon>group</mat-icon> Leden</h2>
+      <h2 class="section-title"><mat-icon>group</mat-icon> {{ 'household.members' | t }}</h2>
       <mat-list>
         @for (m of h.members; track m.userId) {
           <mat-list-item>
             <mat-icon matListItemIcon>person</mat-icon>
-            <span matListItemTitle>{{ m.email }} @if (m.isYou) { <span class="muted">(jij)</span> }</span>
-            <span matListItemLine class="muted">Lid sinds {{ m.joinedAt | date: 'd MMM y' }}</span>
+            <span matListItemTitle>{{ m.email }} @if (m.isYou) { <span class="muted">{{ 'common.you' | t }}</span> }</span>
+            <span matListItemLine class="muted">{{ 'household.memberSince' | t: { date: (m.joinedAt | date: 'd MMM y') } }}</span>
             @if (!m.isYou) {
-              <button mat-icon-button matListItemMeta (click)="remove(m)" aria-label="Lid verwijderen" matTooltip="Verwijderen">
+              <button mat-icon-button matListItemMeta (click)="remove(m)" [attr.aria-label]="'household.removeMember' | t" [matTooltip]="'common.delete' | t">
                 <mat-icon>person_remove</mat-icon>
               </button>
             }
@@ -42,7 +41,7 @@
       </mat-list>
       @if (h.members.length > 1) {
         <div class="form-actions start">
-          <button mat-button (click)="leave()"><mat-icon>logout</mat-icon> Huishouden verlaten</button>
+          <button mat-button (click)="leave()"><mat-icon>logout</mat-icon> {{ 'household.leave' | t }}</button>
         </div>
       }
     </mat-card-content>
@@ -50,36 +49,35 @@
 
   <mat-card appearance="outlined" class="section">
     <mat-card-content>
-      <h2 class="section-title"><mat-icon>person_add</mat-icon> Iemand uitnodigen</h2>
+      <h2 class="section-title"><mat-icon>person_add</mat-icon> {{ 'household.inviteTitle' | t }}</h2>
       <p class="muted">
-        Maak een uitnodigingslink en stuur die zelf door (bv. via WhatsApp). De link werkt één keer en is 7 dagen geldig.
-        Wie nog geen account heeft, kan er via de link een aanmaken.
+        {{ 'household.inviteIntro' | t }}
       </p>
 
       @if (newInvite(); as invite) {
         <div class="invite-link">
           <code>{{ invite.url }}</code>
           <div class="form-actions start">
-            <button mat-flat-button (click)="copyInvite()"><mat-icon>content_copy</mat-icon> Kopiëren</button>
+            <button mat-flat-button (click)="copyInvite()"><mat-icon>content_copy</mat-icon> {{ 'common.copy' | t }}</button>
             @if (canShare) {
-              <button mat-stroked-button (click)="shareInvite()"><mat-icon>share</mat-icon> Delen</button>
+              <button mat-stroked-button (click)="shareInvite()"><mat-icon>share</mat-icon> {{ 'household.share' | t }}</button>
             }
           </div>
-          <p class="muted small">Geldig tot {{ invite.expiresAt | date: 'd MMM y, HH:mm' }}. Deze link wordt maar één keer getoond.</p>
+          <p class="muted small">{{ 'household.inviteValidUntil' | t: { date: (invite.expiresAt | date: 'd MMM y, HH:mm') } }}</p>
         </div>
       } @else {
-        <button mat-flat-button (click)="invite()"><mat-icon>link</mat-icon> Uitnodigingslink maken</button>
+        <button mat-flat-button (click)="invite()"><mat-icon>link</mat-icon> {{ 'household.createInvite' | t }}</button>
       }
 
       @if (h.invites.length) {
-        <h3 class="subtitle">Openstaande uitnodigingen</h3>
+        <h3 class="subtitle">{{ 'household.openInvites' | t }}</h3>
         <mat-list>
           @for (i of h.invites; track i.id) {
             <mat-list-item>
               <mat-icon matListItemIcon>schedule_send</mat-icon>
-              <span matListItemTitle>Gemaakt door {{ i.createdBy }}</span>
-              <span matListItemLine class="muted">{{ i.createdAt | date: 'd MMM, HH:mm' }} · geldig tot {{ i.expiresAt | date: 'd MMM' }}</span>
-              <button mat-icon-button matListItemMeta (click)="revoke(i.id)" aria-label="Intrekken" matTooltip="Intrekken">
+              <span matListItemTitle>{{ 'household.createdBy' | t: { name: i.createdBy } }}</span>
+              <span matListItemLine class="muted">{{ i.createdAt | date: 'd MMM, HH:mm' }} · {{ 'household.validUntil' | t: { date: (i.expiresAt | date: 'd MMM') } }}</span>
+              <button mat-icon-button matListItemMeta (click)="revoke(i.id)" [attr.aria-label]="'household.revoke' | t" [matTooltip]="'household.revoke' | t">
                 <mat-icon>link_off</mat-icon>
               </button>
             </mat-list-item>
@@ -91,17 +89,16 @@
 
   <mat-card appearance="outlined" class="section">
     <mat-card-content>
-      <h2 class="section-title"><mat-icon>add_home</mat-icon> Nog een huishouden</h2>
+      <h2 class="section-title"><mat-icon>add_home</mat-icon> {{ 'household.anotherTitle' | t }}</h2>
       <p class="muted">
-        Je kunt lid zijn van meerdere huishoudens en er bovenin tussen wisselen. Maak hier een nieuw, leeg huishouden aan,
-        bijvoorbeeld voor een spinclub.
+        {{ 'household.anotherIntro' | t }}
       </p>
       <form [formGroup]="createForm" (ngSubmit)="create()" class="rename">
         <mat-form-field subscriptSizing="dynamic">
-          <mat-label>Naam</mat-label>
-          <input matInput formControlName="name" placeholder="bv. Spinclub" required />
+          <mat-label>{{ 'common.name' | t }}</mat-label>
+          <input matInput formControlName="name" [placeholder]="'household.namePlaceholder' | t" required />
         </mat-form-field>
-        <button mat-stroked-button type="submit">Aanmaken</button>
+        <button mat-stroked-button type="submit">{{ 'household.create' | t }}</button>
       </form>
     </mat-card-content>
   </mat-card>

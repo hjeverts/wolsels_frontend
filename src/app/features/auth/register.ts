@@ -8,6 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { AuthError, AuthService } from '../../core/auth.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { HouseholdService } from '../../core/household.service';
 
 export const MIN_PASSWORD_LENGTH = 10;
@@ -20,43 +21,43 @@ export function passwordsMatch(group: AbstractControl): ValidationErrors | null 
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, TranslatePipe],
   template: `
     <mat-card appearance="outlined" class="card">
       <mat-card-content>
-        <h1>Account aanmaken</h1>
+        <h1>{{ 'auth.createAccount' | t }}</h1>
         @if (allowed() === false && !uitnodiging()) {
-          <p class="muted">Registreren is uitgeschakeld. Vraag de beheerder om een account.</p>
-          <div class="links"><a routerLink="/inloggen">Naar inloggen</a></div>
+          <p class="muted">{{ 'register.disabled' | t }}</p>
+          <div class="links"><a routerLink="/inloggen">{{ 'auth.toLogin' | t }}</a></div>
         } @else {
           @if (uitnodiging()) {
-            <p class="muted">Na het aanmaken word je meteen lid van het huishouden waarvoor je bent uitgenodigd.</p>
+            <p class="muted">{{ 'register.withInvite' | t }}</p>
           } @else {
-            <p class="muted">Je gegevens zijn alleen zichtbaar voor jou en wie je zelf uitnodigt.</p>
+            <p class="muted">{{ 'register.privacy' | t }}</p>
           }
           <form [formGroup]="form" (ngSubmit)="submit()">
             <mat-form-field>
-              <mat-label>E-mailadres</mat-label>
+              <mat-label>{{ 'auth.email' | t }}</mat-label>
               <input matInput type="email" formControlName="email" autocomplete="username" required />
             </mat-form-field>
             <mat-form-field subscriptSizing="dynamic">
-              <mat-label>Wachtwoord</mat-label>
+              <mat-label>{{ 'auth.password' | t }}</mat-label>
               <input matInput type="password" formControlName="password" autocomplete="new-password" required />
-              <mat-hint>Minimaal {{ minLength }} tekens. Een zin van een paar woorden is sterk en makkelijk te onthouden.</mat-hint>
+              <mat-hint>{{ 'register.passwordHint' | t: { min: minLength } }}</mat-hint>
             </mat-form-field>
             <mat-form-field>
-              <mat-label>Wachtwoord herhalen</mat-label>
+              <mat-label>{{ 'register.confirmPassword' | t }}</mat-label>
               <input matInput type="password" formControlName="confirm" autocomplete="new-password" required />
             </mat-form-field>
             @if (form.hasError('mismatch') && form.controls.confirm.touched) {
-              <p class="error">De wachtwoorden zijn niet gelijk.</p>
+              <p class="error">{{ 'auth.passwordsDiffer' | t }}</p>
             }
             @if (error()) {
               <p class="error" role="alert">{{ error() }}</p>
             }
-            <button mat-flat-button type="submit" [disabled]="busy()">Account aanmaken</button>
+            <button mat-flat-button type="submit" [disabled]="busy()">{{ 'auth.createAccount' | t }}</button>
           </form>
-          <div class="links"><a routerLink="/inloggen">Ik heb al een account</a></div>
+          <div class="links"><a routerLink="/inloggen">{{ 'auth.haveAccount' | t }}</a></div>
         }
       </mat-card-content>
     </mat-card>
@@ -95,7 +96,7 @@ export class Register {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       if (this.form.controls.password.hasError('minlength'))
-        this.error.set(`Het wachtwoord moet minimaal ${MIN_PASSWORD_LENGTH} tekens lang zijn.`);
+        this.error.set(t('auth.passwordTooShort', { min: MIN_PASSWORD_LENGTH }));
       return;
     }
     const { email, password } = this.form.getRawValue();
@@ -113,7 +114,7 @@ export class Register {
           householdId ? this.households.switchTo(householdId, '/account?welkom=1') : this.router.navigateByUrl('/account?welkom=1'),
         error: (e: unknown) => {
           this.busy.set(false);
-          this.error.set(e instanceof AuthError ? e.message : 'Er ging iets mis.');
+          this.error.set(e instanceof AuthError ? e.message : t('errors.somethingWentWrong'));
         },
       });
   }

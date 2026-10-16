@@ -9,6 +9,7 @@ import { MatListModule } from '@angular/material/list';
 
 import { filter, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { Location } from '../../core/models';
 import { ConfirmService } from '../../shared/confirm.service';
 import { emptyToNull } from '../../shared/form-utils';
@@ -23,33 +24,33 @@ import { emptyToNull } from '../../shared/form-utils';
     MatIconModule,
     MatInputModule,
     MatListModule,
+    TranslatePipe,
   ],
   template: `
     <div class="page-header">
-      <h1>Locaties</h1>
+      <h1>{{ 'nav.locations' | t }}</h1>
     </div>
     <p class="muted">
-      Locaties zijn de plekken waar je dieren verblijven. Houd je geen afzonderlijke dieren bij, dan kun je
-      oogsten ook direct op een locatie registreren.
+      {{ 'locations.intro' | t }}
     </p>
 
     <mat-card appearance="outlined" class="section">
       <mat-card-content>
-        <h2 class="section-title">{{ editingId() ? 'Locatie bewerken' : 'Nieuwe locatie' }}</h2>
+        <h2 class="section-title">{{ (editingId() ? 'locations.edit' : 'locations.new') | t }}</h2>
         <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
           <mat-form-field>
-            <mat-label>Naam</mat-label>
-            <input matInput formControlName="name" required placeholder="bv. Konijnenschuur" />
+            <mat-label>{{ 'common.name' | t }}</mat-label>
+            <input matInput formControlName="name" required [placeholder]="'locations.namePlaceholder' | t" />
           </mat-form-field>
           <mat-form-field>
-            <mat-label>Notities</mat-label>
+            <mat-label>{{ 'common.notes' | t }}</mat-label>
             <input matInput formControlName="notes" />
           </mat-form-field>
           <div class="form-actions span-all">
             @if (editingId()) {
-              <button mat-button type="button" (click)="cancel()">Annuleren</button>
+              <button mat-button type="button" (click)="cancel()">{{ 'common.cancel' | t }}</button>
             }
-            <button mat-flat-button type="submit">{{ editingId() ? 'Opslaan' : 'Toevoegen' }}</button>
+            <button mat-flat-button type="submit">{{ (editingId() ? 'common.save' : 'common.add') | t }}</button>
           </div>
         </form>
       </mat-card-content>
@@ -63,17 +64,17 @@ import { emptyToNull } from '../../shared/form-utils';
               <mat-icon matListItemIcon>location_on</mat-icon>
               <span matListItemTitle>{{ l.name }}</span>
               <span matListItemLine class="muted">
-                {{ l.animalCount }} {{ l.animalCount === 1 ? 'actief dier' : 'actieve dieren' }}{{ l.notes ? ' · ' + l.notes : '' }}
+                {{ 'locations.activeAnimals' | t: { count: l.animalCount } }}{{ l.notes ? ' · ' + l.notes : '' }}
               </span>
               <span matListItemMeta>
-                <button mat-icon-button (click)="edit(l)" aria-label="Bewerken"><mat-icon>edit</mat-icon></button>
-                <button mat-icon-button (click)="remove(l)" aria-label="Verwijderen"><mat-icon>delete</mat-icon></button>
+                <button mat-icon-button (click)="edit(l)" [attr.aria-label]="'common.edit' | t"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button (click)="remove(l)" [attr.aria-label]="'common.delete' | t"><mat-icon>delete</mat-icon></button>
               </span>
             </mat-list-item>
           }
         </mat-list>
       } @else {
-        <div class="empty">Nog geen locaties.</div>
+        <div class="empty">{{ 'locations.empty' | t }}</div>
       }
     }
   `,
@@ -122,7 +123,7 @@ export class LocationList {
 
   protected remove(location: Location): void {
     this.confirm
-      .ask('Locatie verwijderen', `Weet je zeker dat je "${location.name}" wilt verwijderen?`)
+      .ask(t('locations.deleteTitle'), t('common.deleteConfirm', { name: location.name }))
       .pipe(
         filter(Boolean),
         switchMap(() => this.api.locations.delete(location.id)),

@@ -1,3 +1,5 @@
+import { t } from '../core/i18n/i18n';
+
 /** Langste zijde van een geüploade foto, en van de miniatuur in lijsten. */
 export const PHOTO_MAX_SIDE = 1600;
 export const THUMBNAIL_MAX_SIDE = 400;
@@ -19,7 +21,7 @@ export async function resizePhoto(file: Blob): Promise<ResizedPhoto> {
   try {
     bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
   } catch {
-    throw new ImageResizeError('Dit bestand kan niet als foto gelezen worden. Gebruik een JPEG- of PNG-foto.');
+    throw new ImageResizeError(t('photos.unreadable'));
   }
   try {
     return {
@@ -43,7 +45,7 @@ async function toJpeg(bitmap: ImageBitmap, maxSide: number, quality: number): Pr
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext('2d');
-  if (!context) throw new ImageResizeError('Je browser kan deze foto niet verkleinen.');
+  if (!context) throw new ImageResizeError(t('photos.cannotResize'));
   // Witte achtergrond voor transparante PNG's (JPEG kent geen transparantie).
   context.fillStyle = '#ffffff';
   context.fillRect(0, 0, width, height);
@@ -51,7 +53,7 @@ async function toJpeg(bitmap: ImageBitmap, maxSide: number, quality: number): Pr
   context.drawImage(bitmap, 0, 0, width, height);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new ImageResizeError('De foto kon niet verkleind worden.'))),
+      (blob) => (blob ? resolve(blob) : reject(new ImageResizeError(t('photos.resizeFailed')))),
       'image/jpeg',
       quality,
     ),

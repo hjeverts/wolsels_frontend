@@ -9,50 +9,51 @@ import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { AuthError, AuthService } from '../../core/auth.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { safeReturnUrl } from './return-url';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule],
+  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule, TranslatePipe],
   template: `
     <mat-card appearance="outlined" class="card">
       <mat-card-content>
-        <h1>Inloggen</h1>
+        <h1>{{ 'login.title' | t }}</h1>
 
         @if (step() === 'password') {
           <form [formGroup]="form" (ngSubmit)="submit()">
             <mat-form-field>
-              <mat-label>E-mailadres</mat-label>
+              <mat-label>{{ 'auth.email' | t }}</mat-label>
               <input matInput type="email" formControlName="email" autocomplete="username" required />
             </mat-form-field>
             <mat-form-field>
-              <mat-label>Wachtwoord</mat-label>
+              <mat-label>{{ 'auth.password' | t }}</mat-label>
               <input matInput type="password" formControlName="password" autocomplete="current-password" required />
             </mat-form-field>
             @if (error()) {
               <p class="error" role="alert">{{ error() }}</p>
             }
-            <button mat-flat-button type="submit" [disabled]="busy()">Inloggen</button>
+            <button mat-flat-button type="submit" [disabled]="busy()">{{ 'login.submit' | t }}</button>
           </form>
           <div class="links">
             @if (options()?.allowRegistration) {
-              <a routerLink="/registreren">Account aanmaken</a>
+              <a routerLink="/registreren">{{ 'auth.createAccount' | t }}</a>
             }
             @if (options()?.passwordResetAvailable) {
-              <a routerLink="/wachtwoord-vergeten">Wachtwoord vergeten?</a>
+              <a routerLink="/wachtwoord-vergeten">{{ 'login.forgotPassword' | t }}</a>
             }
           </div>
         } @else {
           <p class="muted">
             @if (useRecovery()) {
-              Vul een van je herstelcodes in. Elke code werkt maar één keer.
+              {{ 'login.enterRecoveryCode' | t }}
             } @else {
-              Vul de 6-cijferige code uit je authenticator-app in.
+              {{ 'login.enterCode' | t }}
             }
           </p>
           <form [formGroup]="codeForm" (ngSubmit)="submit()">
             <mat-form-field>
-              <mat-label>{{ useRecovery() ? 'Herstelcode' : 'Code' }}</mat-label>
+              <mat-label>{{ (useRecovery() ? 'login.recoveryCode' : 'login.code') | t }}</mat-label>
               <mat-icon matPrefix>{{ useRecovery() ? 'key' : 'phonelink_lock' }}</mat-icon>
               <input matInput formControlName="code" autocomplete="one-time-code"
                 [attr.inputmode]="useRecovery() ? null : 'numeric'" required />
@@ -60,13 +61,13 @@ import { safeReturnUrl } from './return-url';
             @if (error()) {
               <p class="error" role="alert">{{ error() }}</p>
             }
-            <button mat-flat-button type="submit" [disabled]="busy()">Verifiëren</button>
+            <button mat-flat-button type="submit" [disabled]="busy()">{{ 'login.verify' | t }}</button>
           </form>
           <div class="links">
             <a href="" (click)="$event.preventDefault(); toggleRecovery()">
-              {{ useRecovery() ? 'Code uit de app gebruiken' : 'Geen toegang tot je app? Gebruik een herstelcode' }}
+              {{ (useRecovery() ? 'login.useAppCode' : 'login.useRecoveryCode') | t }}
             </a>
-            <a href="" (click)="$event.preventDefault(); back()">Terug</a>
+            <a href="" (click)="$event.preventDefault(); back()">{{ 'common.back' | t }}</a>
           </div>
         }
       </mat-card-content>
@@ -119,7 +120,7 @@ export class Login {
       },
       error: (e: unknown) => {
         this.busy.set(false);
-        this.error.set(e instanceof AuthError ? e.message : 'Er ging iets mis.');
+        this.error.set(e instanceof AuthError ? e.message : t('errors.somethingWentWrong'));
         this.codeForm.reset();
       },
     });

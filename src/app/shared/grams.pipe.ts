@@ -1,13 +1,14 @@
 import { Pipe, PipeTransform } from '@angular/core';
-
-const grams = new Intl.NumberFormat('nl-NL', { maximumFractionDigits: 1 });
-const kilos = new Intl.NumberFormat('nl-NL', { maximumFractionDigits: 2 });
+import { currentLocale } from '../core/i18n/i18n';
 
 /** Toont een gewicht in gram, of in kilogram vanaf 1000 g. */
 @Pipe({ name: 'grams' })
 export class GramsPipe implements PipeTransform {
+  private readonly grams = new Intl.NumberFormat(currentLocale(), { maximumFractionDigits: 1 });
+  private readonly kilos = new Intl.NumberFormat(currentLocale(), { maximumFractionDigits: 2 });
+
   transform(value: number | null | undefined): string {
     if (value === null || value === undefined) return '–';
-    return Math.abs(value) >= 1000 ? `${kilos.format(value / 1000)} kg` : `${grams.format(value)} g`;
+    return Math.abs(value) >= 1000 ? `${this.kilos.format(value / 1000)} kg` : `${this.grams.format(value)} g`;
   }
 }

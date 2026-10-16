@@ -1,12 +1,16 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, map, of, switchMap, tap, throwError } from 'rxjs';
+import { currentLanguage, switchLanguage, t } from './i18n/i18n';
+import { Language, isLanguage } from './i18n/languages';
 
 export interface Me {
   email: string;
   twoFactorEnabled: boolean;
   recoveryCodesLeft: number;
   isAdmin: boolean;
+  /** Taal uit het profiel; null voor een account dat nog geen taal heeft. */
+  language: string | null;
 }
 
 export interface TwoFactorState {
@@ -19,7 +23,7 @@ export interface TwoFactorState {
 
 export type LoginResult = 'ok' | 'requiresTwoFactor';
 
-/** Fout bij inloggen of registreren, met een Nederlandse melding voor in het formulier. */
+/** Fout bij inloggen of registreren, met een (vertaalde) melding voor in het formulier. */
 export class AuthError extends Error {}
 
 @Injectable({ providedIn: 'root' })
@@ -35,6 +39,28 @@ export class AuthService {
       catchError(() => of(null)),
       tap((me) => this.user.set(me)),
     );
+  }
+
+  /** Saves the language in the profile. */
+  saveLanguage(language: Language): Observable<void> {
+    return this.http.put<void>('/api/auth/language', { language }).pipe(
+      tap(() => this.user.update((me) => (me ? { ...me, language } : me))),
+      catchError((error: HttpErrorResponse) => throwError(() => new AuthError(problemMessage(error)))),
+    );
+  }
+
+  /**
+   * Applies the profile language, which holds on every device: if it differs, the app reloads in that
+   * language. An account without a language (just created) gets the language the app is in now.
+   *
+   * Only call this at a safe moment (after a completed navigation, see App): a reload in the middle of a
+   * flow would, for example, throw away freshly shown recovery codes or the page to return to after login.
+   */
+  syncLanguage(): void {
+    const me = this.user();
+    if (!me) return;
+    if (!isLanguage(me.language)) this.saveLanguage(currentLanguage()).subscribe({ error: () => undefined });
+    else if (me.language !== currentLanguage()) switchLanguage(me.language);
   }
 
   /** Wat er mogelijk is op de inlogpagina's; noemt registreren en "wachtwoord vergeten". */
@@ -111,25 +137,24 @@ export class AuthService {
           : of(state),
       ),
       catchError((error: HttpErrorResponse) =>
-        throwError(() => new AuthError(error.status === 400 ? 'De code klopt niet. Probeer de volgende code uit je app.' : problemMessage(error))),
+        throwError(() => new AuthError(error.status === 400 ? t('errors.wrongCodeTryNext') : problemMessage(error))),
       ),
     );
   }
 }
 
 function loginMessage(status: number, detail: string | undefined, withTwoFactor: boolean): string {
-  if (status === 429) return 'Te veel pogingen. Wacht een minuut en probeer het opnieuw.';
-  if (status === 0) return 'De server is niet bereikbaar.';
-  if (detail === 'LockedOut')
-    return 'Je account is geblokkeerd, na te veel mislukte pogingen of door een beheerder. Probeer het later opnieuw.';
-  if (withTwoFactor) return 'De code klopt niet.';
-  return 'Onjuist e-mailadres of wachtwoord.';
+  if (status === 429) return t('errors.tooManyAttempts');
+  if (status === 0) return t('errors.serverUnreachable');
+  if (detail === 'LockedOut') return t('errors.lockedOut');
+  if (withTwoFactor) return t('errors.wrongCode');
+  return t('errors.wrongCredentials');
 }
 
 function problemMessage(error: HttpErrorResponse): string {
-  if (error.status === 0) return 'De server is niet bereikbaar.';
-  if (error.status === 429) return 'Te veel pogingen. Wacht een minuut en probeer het opnieuw.';
+  if (error.status === 0) return t('errors.serverUnreachable');
+  if (error.status === 429) return t('errors.tooManyAttempts');
   const problem = error.error as { title?: string; errors?: Record<string, string[]> } | null;
   const details = problem?.errors ? Object.values(problem.errors).flat() : [];
-  return details.length ? details.join(' ') : (problem?.title ?? 'Er ging iets mis.');
+  return details.length ? details.join(' ') : (problem?.title ?? t('errors.somethingWentWrong'));
 }

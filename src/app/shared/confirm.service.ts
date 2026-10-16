@@ -2,14 +2,15 @@ import { Component, Injectable, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Observable, map } from 'rxjs';
+import { TranslatePipe, t } from '../core/i18n/i18n';
 
 @Component({
-  imports: [MatDialogModule, MatButtonModule],
+  imports: [MatDialogModule, MatButtonModule, TranslatePipe],
   template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <mat-dialog-content>{{ data.message }}</mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Annuleren</button>
+      <button mat-button mat-dialog-close>{{ 'common.cancel' | t }}</button>
       <button mat-flat-button [mat-dialog-close]="true">{{ data.confirm }}</button>
     </mat-dialog-actions>
   `,
@@ -19,12 +20,12 @@ class ConfirmDialog {
 }
 
 @Component({
-  imports: [MatDialogModule, MatButtonModule],
+  imports: [MatDialogModule, MatButtonModule, TranslatePipe],
   template: `
     <h2 mat-dialog-title>{{ data.title }}</h2>
     <mat-dialog-content>{{ data.message }}</mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Annuleren</button>
+      <button mat-button mat-dialog-close>{{ 'common.cancel' | t }}</button>
       @for (choice of data.choices; track choice.value; let last = $last) {
         @if (last) {
           <button mat-flat-button [mat-dialog-close]="choice.value">{{ choice.label }}</button>
@@ -43,7 +44,7 @@ class ChoiceDialog {
 export class ConfirmService {
   private readonly dialog = inject(MatDialog);
 
-  ask(title: string, message: string, confirm = 'Verwijderen'): Observable<boolean> {
+  ask(title: string, message: string, confirm = t('common.delete')): Observable<boolean> {
     return this.dialog
       .open(ConfirmDialog, { data: { title, message, confirm } })
       .afterClosed()

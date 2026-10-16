@@ -5,9 +5,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from './core/auth.service';
 import { HouseholdService } from './core/household.service';
+import { TranslatePipe, TranslationKey } from './core/i18n/i18n';
 
 @Component({
   selector: 'app-root',
@@ -21,6 +23,7 @@ import { HouseholdService } from './core/household.service';
     MatTabsModule,
     MatIconModule,
     MatMenuModule,
+    TranslatePipe,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -35,14 +38,16 @@ export class App {
     effect(() => {
       if (this.auth.user()) this.households.load().subscribe();
     });
+    // Apply the profile language between pages, never in the middle of a flow (see AuthService.syncLanguage).
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => this.auth.syncLanguage());
   }
 
-  protected readonly links = [
-    { path: '/voorraad', label: 'Voorraad', icon: 'inventory_2' },
-    { path: '/mengsels', label: 'Mengsels', icon: 'blender' },
-    { path: '/productie', label: 'Productie', icon: 'agriculture' },
-    { path: '/dieren', label: 'Dieren', icon: 'cruelty_free' },
-    { path: '/locaties', label: 'Locaties', icon: 'location_on' },
+  protected readonly links: { path: string; label: TranslationKey; icon: string }[] = [
+    { path: '/voorraad', label: 'nav.stock', icon: 'inventory_2' },
+    { path: '/mengsels', label: 'nav.blends', icon: 'blender' },
+    { path: '/productie', label: 'nav.production', icon: 'agriculture' },
+    { path: '/dieren', label: 'nav.animals', icon: 'cruelty_free' },
+    { path: '/locaties', label: 'nav.locations', icon: 'location_on' },
   ];
 
   protected logout(): void {
