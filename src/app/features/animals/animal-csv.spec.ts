@@ -1,3 +1,6 @@
+import { useTranslations } from '../../core/i18n/i18n';
+import de from '../../core/i18n/translations/de';
+import nl from '../../core/i18n/translations/nl';
 import { Animal } from '../../core/models';
 import { parseCsv } from '../../shared/csv';
 import { animalsToCsv, autoMap, buildImportRows, importedFields, parseBoolean, parseDate } from './animal-csv';
@@ -106,5 +109,25 @@ describe('buildImportRows', () => {
   it('controleert de maximale lengte', () => {
     const table = [['Naam'], ['x'.repeat(201)]];
     expect(buildImportRows(table, autoMap(table[0]))[0].errors).toEqual(['Naam is langer dan 200 tekens.']);
+  });
+});
+
+describe('animal-csv in andere talen', () => {
+  afterEach(() => useTranslations('nl', nl));
+
+  it('leest een export uit een andere taal ongewijzigd terug', () => {
+    const german: Animal = {
+      id: 1, name: 'Flocke', species: 'Kaninchen', breed: null, color: 'Weiß', birthDate: '2024-03-01',
+      locationId: null, locationName: 'Stall', active: false, notes: null, totalHarvestedGrams: 0, lastHarvestDate: null,
+    };
+    useTranslations('de', de);
+    const csv = animalsToCsv([german]);
+    expect(csv.split('\r\n')[0]).toBe('Name,Tierart,Rasse,Farbe,Geburtsdatum,Standort,Aktiv,Notizen');
+
+    useTranslations('nl', nl);
+    const table = parseCsv(csv);
+    const [row] = buildImportRows(table, autoMap(table[0]));
+    expect(row.errors).toEqual([]);
+    expect(row.row).toMatchObject({ name: 'Flocke', species: 'Kaninchen', location: 'Stall', active: false, birthDate: '2024-03-01' });
   });
 });

@@ -3,6 +3,8 @@
  * Exporteren gebeurt met komma's, de internationale standaard. Importeren kan ook met puntkomma's of tabs.
  */
 
+import { t } from '../core/i18n/i18n';
+
 export const CSV_DELIMITER = ',';
 
 /**
@@ -63,7 +65,7 @@ export function parseCsv(text: string): string[][] {
     }
   }
   if (quoted) {
-    throw new CsvError(`Op regel ${quoteLine} begint een veld met een aanhalingsteken (") dat niet wordt afgesloten.`);
+    throw new CsvError(t('csv.unclosedQuote', { line: quoteLine }));
   }
   if (field !== '' || row.length) {
     row.push(field);

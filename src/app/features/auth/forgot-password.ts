@@ -6,33 +6,33 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
 import { AuthError, AuthService } from '../../core/auth.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 
 @Component({
   selector: 'app-forgot-password',
-  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, RouterLink, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, TranslatePipe],
   template: `
     <mat-card appearance="outlined" class="card">
       <mat-card-content>
-        <h1>Wachtwoord vergeten</h1>
+        <h1>{{ 'forgot.title' | t }}</h1>
         @if (sent()) {
           <p class="success" role="status">
-            Als er een account bij dit e-mailadres hoort, ontvang je binnen een paar minuten een mail met een link
-            om een nieuw wachtwoord in te stellen. Kijk ook in je spamfolder.
+            {{ 'forgot.sent' | t }}
           </p>
         } @else {
-          <p class="muted">Vul je e-mailadres in; je ontvangt een link om een nieuw wachtwoord in te stellen.</p>
+          <p class="muted">{{ 'forgot.intro' | t }}</p>
           <form [formGroup]="form" (ngSubmit)="submit()">
             <mat-form-field>
-              <mat-label>E-mailadres</mat-label>
+              <mat-label>{{ 'auth.email' | t }}</mat-label>
               <input matInput type="email" formControlName="email" autocomplete="username" required />
             </mat-form-field>
             @if (error()) {
               <p class="error" role="alert">{{ error() }}</p>
             }
-            <button mat-flat-button type="submit" [disabled]="busy()">Herstellink versturen</button>
+            <button mat-flat-button type="submit" [disabled]="busy()">{{ 'forgot.submit' | t }}</button>
           </form>
         }
-        <div class="links"><a routerLink="/inloggen">Terug naar inloggen</a></div>
+        <div class="links"><a routerLink="/inloggen">{{ 'auth.backToLogin' | t }}</a></div>
       </mat-card-content>
     </mat-card>
   `,
@@ -58,7 +58,7 @@ export class ForgotPassword {
       next: () => this.sent.set(true),
       error: (e: unknown) => {
         this.busy.set(false);
-        this.error.set(e instanceof AuthError ? e.message : 'Er ging iets mis.');
+        this.error.set(e instanceof AuthError ? e.message : t('errors.somethingWentWrong'));
       },
     });
   }

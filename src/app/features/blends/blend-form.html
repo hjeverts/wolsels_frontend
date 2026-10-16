@@ -1,8 +1,8 @@
 <div class="page-header">
-  <h1>{{ id() ? 'Mengsel bewerken' : 'Nieuw mengsel' }}</h1>
-  <mat-button-toggle-group [formControl]="form.controls.status" aria-label="Status" hideSingleSelectionIndicator>
-    <mat-button-toggle value="Planned"><mat-icon>edit_note</mat-icon> Gepland</mat-button-toggle>
-    <mat-button-toggle value="Spun" (change)="markSpunToday()"><mat-icon>check_circle</mat-icon> Gesponnen</mat-button-toggle>
+  <h1>{{ (id() ? 'blends.edit' : 'blends.new') | t }}</h1>
+  <mat-button-toggle-group [formControl]="form.controls.status" [attr.aria-label]="'blends.status' | t" hideSingleSelectionIndicator>
+    <mat-button-toggle value="Planned"><mat-icon>edit_note</mat-icon> {{ 'blends.planned' | t }}</mat-button-toggle>
+    <mat-button-toggle value="Spun" (change)="markSpunToday()"><mat-icon>check_circle</mat-icon> {{ 'blends.spun' | t }}</mat-button-toggle>
   </mat-button-toggle-group>
 </div>
 
@@ -10,41 +10,38 @@
   <p class="stock-info">
     <mat-icon inline>inventory_2</mat-icon>
     @if (stockDeducted()) {
-      De wol van dit mengsel is van de voorraad afgeboekt. Wijzigingen in de gewichten worden bij opslaan verrekend;
-      terugzetten naar Gepland boekt alles terug.
+      {{ 'blends.stockDeducted' | t }}
     } @else {
-      Bij opslaan wordt de wol van dit mengsel van de voorraad afgeboekt.
+      {{ 'blends.stockWillDeduct' | t }}
     }
   </p>
 } @else if (stockDeducted()) {
   <p class="stock-info">
-    <mat-icon inline>undo</mat-icon> Bij opslaan gaat de afgeboekte wol terug naar de voorraad.
+    <mat-icon inline>undo</mat-icon> {{ 'blends.stockWillReturn' | t }}
   </p>
 }
 
 <form [formGroup]="form" (ngSubmit)="save()">
   <div class="form-grid">
     <mat-form-field class="span-all">
-      <mat-label>Naam van het mengsel</mat-label>
-      <input matInput formControlName="name" required placeholder="bv. Herfstbos" />
+      <mat-label>{{ 'blends.name' | t }}</mat-label>
+      <input matInput formControlName="name" required [placeholder]="'blends.namePlaceholder' | t" />
     </mat-form-field>
   </div>
 
   <!-- Mengverhouding -->
   <mat-card appearance="outlined" class="section">
     <mat-card-content>
-      <h2 class="section-title"><mat-icon>blender</mat-icon> Mengverhouding</h2>
+      <h2 class="section-title"><mat-icon>blender</mat-icon> {{ 'blends.blendRatio' | t }}</h2>
       <p class="muted help">
-        Vul de verhouding in (delen zoals 3 : 2, of procenten). Vul daarna het <strong>totaalgewicht</strong> óf het
-        <strong>gewicht van één soort</strong> in; de andere gewichten worden automatisch berekend. Het veld met
-        <mat-icon inline>push_pin</mat-icon> is leidend.
+        {{ 'blends.ratioHelp' | t }} {{ 'blends.ratioHelpPinned' | t }} <mat-icon inline>push_pin</mat-icon>
       </p>
 
       <div formArrayName="components" class="components">
         @for (row of components.controls; track row; let i = $index) {
           <div class="component-row" [formGroupName]="i">
             <mat-form-field class="wool" subscriptSizing="dynamic">
-              <mat-label>Wol {{ i + 1 }}</mat-label>
+              <mat-label>{{ 'blends.woolN' | t: { n: i + 1 } }}</mat-label>
               <mat-select formControlName="woolId" required>
                 <mat-select-trigger>
                   @if (woolById(row.controls.woolId.value); as wool) {
@@ -61,12 +58,12 @@
                 }
               </mat-select>
               @if (stockWarnings()[i]; as available) {
-                <mat-hint class="warn">Let op: maar {{ available | grams }} op voorraad</mat-hint>
+                <mat-hint class="warn">{{ 'blends.onlyInStock' | t: { weight: (available | grams) } }}</mat-hint>
               }
             </mat-form-field>
 
             <mat-form-field class="ratio" subscriptSizing="dynamic">
-              <mat-label>Verhouding</mat-label>
+              <mat-label>{{ 'blends.ratio' | t }}</mat-label>
               <input matInput type="number" min="0" step="any" formControlName="ratio" (input)="recalculate()" required />
               @if (percentages()[i] !== undefined) {
                 <mat-hint>{{ percentages()[i] }}%</mat-hint>
@@ -74,16 +71,16 @@
             </mat-form-field>
 
             <mat-form-field class="weight" subscriptSizing="dynamic" [class.basis]="isBasis(i)">
-              <mat-label>Gewicht</mat-label>
+              <mat-label>{{ 'common.weight' | t }}</mat-label>
               <input matInput type="number" min="0" step="0.1" formControlName="weight" (input)="onWeightInput(i)" />
               <span matTextSuffix>g</span>
               @if (isBasis(i)) {
-                <mat-icon matSuffix class="pin" matTooltip="Leidend gewicht">push_pin</mat-icon>
+                <mat-icon matSuffix class="pin" [matTooltip]="'blends.leadingWeight' | t">push_pin</mat-icon>
               }
             </mat-form-field>
 
             <button mat-icon-button type="button" (click)="removeComponent(i)" [disabled]="components.length <= 1"
-              aria-label="Soort verwijderen" matTooltip="Verwijderen">
+              [attr.aria-label]="'blends.removeWool' | t" [matTooltip]="'common.delete' | t">
               <mat-icon>close</mat-icon>
             </button>
           </div>
@@ -92,16 +89,16 @@
 
       <div class="totals-row">
         <button mat-stroked-button type="button" (click)="addComponent()" [disabled]="components.length >= maxComponents()">
-          <mat-icon>add</mat-icon> Soort toevoegen
+          <mat-icon>add</mat-icon> {{ 'blends.addWool' | t }}
           <span class="muted">({{ components.length }}/{{ maxComponents() }})</span>
         </button>
 
         <mat-form-field class="weight total" subscriptSizing="dynamic" [class.basis]="isBasis('total')">
-          <mat-label>Totaal input</mat-label>
+          <mat-label>{{ 'blends.totalInput' | t }}</mat-label>
           <input matInput type="number" min="0" step="0.1" formControlName="totalWeight" (input)="onTotalInput()" />
           <span matTextSuffix>g</span>
           @if (isBasis('total')) {
-            <mat-icon matSuffix class="pin" matTooltip="Leidend gewicht">push_pin</mat-icon>
+            <mat-icon matSuffix class="pin" [matTooltip]="'blends.leadingWeight' | t">push_pin</mat-icon>
           }
         </mat-form-field>
       </div>
@@ -124,40 +121,40 @@
   <!-- Resultaat na het spinnen -->
   <mat-card appearance="outlined" class="section">
     <mat-card-content>
-      <h2 class="section-title"><mat-icon>gesture</mat-icon> Resultaat na het spinnen</h2>
+      <h2 class="section-title"><mat-icon>gesture</mat-icon> {{ 'blends.result' | t }}</h2>
       <div class="form-grid">
         <mat-form-field>
-          <mat-label>Gesponnen op</mat-label>
+          <mat-label>{{ 'blends.spunOn' | t }}</mat-label>
           <input matInput type="date" formControlName="spunOn" />
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Opbrengst (output)</mat-label>
+          <mat-label>{{ 'blends.outputWeight' | t }}</mat-label>
           <input matInput type="number" min="0" step="0.1" formControlName="outputWeightGrams" />
           <span matTextSuffix>g</span>
           @if (yieldPercentage() !== null) {
-            <mat-hint>{{ yieldPercentage() | number: '1.0-1' }}% · {{ (inputTotal() ?? 0) - (form.controls.outputWeightGrams.value ?? 0) | grams }} verlies</mat-hint>
+            <mat-hint>{{ yieldPercentage() | number: '1.0-1' }}% · {{ 'blends.loss' | t: { weight: ((inputTotal() ?? 0) - (form.controls.outputWeightGrams.value ?? 0) | grams) } }}</mat-hint>
           }
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Lengte</mat-label>
+          <mat-label>{{ 'blends.length' | t }}</mat-label>
           <input matInput type="number" min="0" step="1" formControlName="outputLengthMeters" />
           <span matTextSuffix>m</span>
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Wraps per inch (WPI)</mat-label>
+          <mat-label>{{ 'blends.wpi' | t }}</mat-label>
           <input matInput type="number" min="1" step="1" formControlName="wrapsPerInch" />
           @if (wpiSuggestion(); as suggestion) {
             <mat-hint>
-              Komt overeen met <a href="" (click)="$event.preventDefault(); suggestYarnWeight()">{{ suggestion }}</a>
+              {{ 'blends.matches' | t }} <a href="" (click)="$event.preventDefault(); suggestYarnWeight()">{{ suggestion }}</a>
             </mat-hint>
           }
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Garendikte</mat-label>
+          <mat-label>{{ 'blends.yarnWeight' | t }}</mat-label>
           <mat-select formControlName="yarnWeight">
             <mat-option [value]="null">–</mat-option>
             @for (y of yarnWeights; track y.name) {
@@ -167,12 +164,12 @@
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Aantal draden</mat-label>
+          <mat-label>{{ 'blends.plyCountLabel' | t }}</mat-label>
           <input matInput type="number" min="1" max="20" step="1" formControlName="plyCount" />
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Twijnwijze</mat-label>
+          <mat-label>{{ 'blends.plyMethod' | t }}</mat-label>
           <input matInput formControlName="plyMethod" [matAutocomplete]="ply" />
           <mat-autocomplete #ply>
             @for (m of plySuggestions(); track m) {
@@ -182,10 +179,10 @@
         </mat-form-field>
 
         <div class="toggle-field">
-          <span class="muted">Spinrichting enkeldraad</span>
-          <mat-button-toggle-group formControlName="spinDirection" aria-label="Spinrichting">
-            <mat-button-toggle value="Z" matTooltip="Rechtsom gesponnen, links getwijnd">Z</mat-button-toggle>
-            <mat-button-toggle value="S" matTooltip="Linksom gesponnen, rechts getwijnd">S</mat-button-toggle>
+          <span class="muted">{{ 'blends.spinDirectionSingles' | t }}</span>
+          <mat-button-toggle-group formControlName="spinDirection" [attr.aria-label]="'blends.spinDirection' | t">
+            <mat-button-toggle value="Z" [matTooltip]="'blends.zTwist' | t">Z</mat-button-toggle>
+            <mat-button-toggle value="S" [matTooltip]="'blends.sTwist' | t">S</mat-button-toggle>
           </mat-button-toggle-group>
         </div>
       </div>
@@ -196,20 +193,20 @@
   <mat-card appearance="outlined" class="section">
     <mat-card-content>
       <h2 class="section-title">
-        <mat-icon>palette</mat-icon> Verven
-        <mat-slide-toggle formControlName="isDyed" class="dye-toggle">Geverfd</mat-slide-toggle>
+        <mat-icon>palette</mat-icon> {{ 'blends.dyeing' | t }}
+        <mat-slide-toggle formControlName="isDyed" class="dye-toggle">{{ 'blends.dyed' | t }}</mat-slide-toggle>
       </h2>
       @if (isDyed()) {
         <div class="form-grid">
           <mat-form-field subscriptSizing="dynamic">
-            <mat-label>Kleur</mat-label>
-            <input matInput formControlName="dyeColor" placeholder="bv. Oceaanblauw" />
+            <mat-label>{{ 'wools.color' | t }}</mat-label>
+            <input matInput formControlName="dyeColor" [placeholder]="'blends.dyeColorPlaceholder' | t" />
             <app-color-pick matSuffix [color]="dyeColor" />
             <mat-hint><app-color-hint [color]="dyeColor" /></mat-hint>
           </mat-form-field>
 
           <mat-form-field>
-            <mat-label>Verfstof</mat-label>
+            <mat-label>{{ 'blends.dyeProduct' | t }}</mat-label>
             <input matInput formControlName="dyeProduct" [matAutocomplete]="dye" />
             <mat-autocomplete #dye>
               @for (d of dyeSuggestions(); track d) {
@@ -219,28 +216,28 @@
           </mat-form-field>
 
           <mat-form-field class="span-all">
-            <mat-label>Werkwijze</mat-label>
+            <mat-label>{{ 'blends.dyeMethod' | t }}</mat-label>
             <textarea matInput formControlName="dyeMethod" rows="5"
-              placeholder="bv. 2 uur voorgeweekt, beitsen met 10% aluin, 45 min op 85 °C, laten afkoelen in het verfbad…"></textarea>
+              [placeholder]="'blends.dyeMethodPlaceholder' | t"></textarea>
           </mat-form-field>
         </div>
       } @else {
-        <p class="muted">Niet geverfd.</p>
+        <p class="muted">{{ 'blends.notDyed' | t }}</p>
       }
     </mat-card-content>
   </mat-card>
 
   <mat-form-field class="notes">
-    <mat-label>Notities</mat-label>
+    <mat-label>{{ 'common.notes' | t }}</mat-label>
     <textarea matInput formControlName="notes" rows="3"></textarea>
   </mat-form-field>
 
   <div class="form-actions">
     @if (id()) {
-      <button mat-button type="button" (click)="remove()"><mat-icon>delete</mat-icon> Verwijderen</button>
+      <button mat-button type="button" (click)="remove()"><mat-icon>delete</mat-icon> {{ 'common.delete' | t }}</button>
     }
     <span class="spacer"></span>
-    <a mat-button routerLink="/mengsels">Annuleren</a>
-    <button mat-flat-button type="submit" [disabled]="saving()">Opslaan</button>
+    <a mat-button routerLink="/mengsels">{{ 'common.cancel' | t }}</a>
+    <button mat-flat-button type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
   </div>
 </form>

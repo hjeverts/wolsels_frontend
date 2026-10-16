@@ -6,88 +6,88 @@ const appRoutes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'voorraad' },
   {
     path: 'huishouden',
-    title: 'Huishouden · Wolsels',
+    title: 'title.household',
     loadComponent: () => import('./features/household/household-page').then((m) => m.HouseholdPage),
   },
   {
     path: 'beheer',
-    title: 'Gebruikersbeheer · Wolsels',
+    title: 'title.admin',
     canActivate: [adminGuard],
     loadComponent: () => import('./features/admin/admin-users').then((m) => m.AdminUsers),
   },
   {
     path: 'account',
-    title: 'Account · Wolsels',
+    title: 'title.account',
     loadComponent: () => import('./features/auth/account').then((m) => m.Account),
   },
   {
     path: 'voorraad',
-    title: 'Voorraad · Wolsels',
+    title: 'title.stock',
     loadComponent: () => import('./features/wools/wool-list').then((m) => m.WoolList),
   },
   {
     path: 'voorraad/nieuw',
-    title: 'Nieuwe wol · Wolsels',
+    title: 'title.newWool',
     loadComponent: () => import('./features/wools/wool-form').then((m) => m.WoolForm),
   },
   {
     path: 'voorraad/:id',
-    title: 'Wol · Wolsels',
+    title: 'title.wool',
     loadComponent: () => import('./features/wools/wool-form').then((m) => m.WoolForm),
   },
   {
     path: 'mengsels',
-    title: 'Mengsels · Wolsels',
+    title: 'title.blends',
     loadComponent: () => import('./features/blends/blend-list').then((m) => m.BlendList),
   },
   {
     path: 'mengsels/nieuw',
-    title: 'Nieuw mengsel · Wolsels',
+    title: 'title.newBlend',
     loadComponent: () => import('./features/blends/blend-form').then((m) => m.BlendForm),
   },
   {
     path: 'mengsels/:id',
-    title: 'Mengsel · Wolsels',
+    title: 'title.blend',
     loadComponent: () => import('./features/blends/blend-form').then((m) => m.BlendForm),
   },
   {
     path: 'productie',
-    title: 'Productie · Wolsels',
+    title: 'title.production',
     loadComponent: () => import('./features/production/production-overview').then((m) => m.ProductionOverview),
   },
   {
     path: 'productie/nieuw',
-    title: 'Nieuwe oogst · Wolsels',
+    title: 'title.newHarvest',
     loadComponent: () => import('./features/production/harvest-form').then((m) => m.HarvestForm),
   },
   {
     path: 'productie/:id',
-    title: 'Oogst · Wolsels',
+    title: 'title.harvest',
     loadComponent: () => import('./features/production/harvest-form').then((m) => m.HarvestForm),
   },
   {
     path: 'dieren',
-    title: 'Dieren · Wolsels',
+    title: 'title.animals',
     loadComponent: () => import('./features/animals/animal-list').then((m) => m.AnimalList),
   },
   {
     path: 'dieren/nieuw',
-    title: 'Nieuw dier · Wolsels',
+    title: 'title.newAnimal',
     loadComponent: () => import('./features/animals/animal-form').then((m) => m.AnimalForm),
   },
   {
     path: 'dieren/importeren',
-    title: 'Dieren importeren · Wolsels',
+    title: 'title.importAnimals',
     loadComponent: () => import('./features/animals/animal-import').then((m) => m.AnimalImport),
   },
   {
     path: 'dieren/:id',
-    title: 'Dier · Wolsels',
+    title: 'title.animal',
     loadComponent: () => import('./features/animals/animal-form').then((m) => m.AnimalForm),
   },
   {
     path: 'locaties',
-    title: 'Locaties · Wolsels',
+    title: 'title.locations',
     loadComponent: () => import('./features/locations/location-list').then((m) => m.LocationList),
   },
 ];
@@ -95,32 +95,32 @@ const appRoutes: Routes = [
 export const routes: Routes = [
   {
     path: 'inloggen',
-    title: 'Inloggen · Wolsels',
+    title: 'title.login',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/login').then((m) => m.Login),
   },
   {
     path: 'registreren',
-    title: 'Registreren · Wolsels',
+    title: 'title.register',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/register').then((m) => m.Register),
   },
   {
     path: 'wachtwoord-vergeten',
-    title: 'Wachtwoord vergeten · Wolsels',
+    title: 'title.forgotPassword',
     canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/forgot-password').then((m) => m.ForgotPassword),
   },
   {
     // Bereikbaar via de link in de herstelmail, ook als je (nog) ingelogd bent.
     path: 'wachtwoord-herstellen',
-    title: 'Nieuw wachtwoord · Wolsels',
+    title: 'title.resetPassword',
     loadComponent: () => import('./features/auth/reset-password').then((m) => m.ResetPassword),
   },
   {
     // Bereikbaar met en zonder login.
     path: 'uitnodiging/:token',
-    title: 'Uitnodiging · Wolsels',
+    title: 'title.invite',
     loadComponent: () => import('./features/household/invite-page').then((m) => m.InvitePage),
   },
   { path: '', canActivate: [authGuard], children: appRoutes },

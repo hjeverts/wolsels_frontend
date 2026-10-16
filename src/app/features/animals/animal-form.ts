@@ -13,13 +13,20 @@ import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { filter, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { Harvest } from '../../core/models';
 import { ConfirmService } from '../../shared/confirm.service';
 import { emptyToNull } from '../../shared/form-utils';
 import { GramsPipe } from '../../shared/grams.pipe';
 
-const SPECIES = ['Konijn', 'Schaap', 'Alpaca', 'Lama', 'Geit'];
-const BREEDS = ['Duitse angora', 'Franse angora', 'Engelse angora', 'Satijn angora', 'Reuzen angora'];
+const species = () => [t('animals.rabbit'), t('animals.sheep'), 'Alpaca', t('animals.llama'), t('animals.goat')];
+const breeds = () => [
+  t('animals.germanAngora'),
+  t('animals.frenchAngora'),
+  t('animals.englishAngora'),
+  t('animals.satinAngora'),
+  t('animals.giantAngora'),
+];
 
 @Component({
   selector: 'app-animal-form',
@@ -36,21 +43,22 @@ const BREEDS = ['Duitse angora', 'Franse angora', 'Engelse angora', 'Satijn ango
     MatSlideToggleModule,
     MatTableModule,
     GramsPipe,
+    TranslatePipe,
   ],
   template: `
     <div class="page-header">
-      <h1>{{ id() ? 'Dier bewerken' : 'Dier toevoegen' }}</h1>
+      <h1>{{ (id() ? 'animals.edit' : 'animals.add') | t }}</h1>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-grid">
         <mat-form-field>
-          <mat-label>Naam</mat-label>
+          <mat-label>{{ 'common.name' | t }}</mat-label>
           <input matInput formControlName="name" required />
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Diersoort</mat-label>
+          <mat-label>{{ 'animals.species' | t }}</mat-label>
           <input matInput formControlName="species" [matAutocomplete]="species" required />
           <mat-autocomplete #species>
             @for (s of speciesOptions; track s) {
@@ -60,7 +68,7 @@ const BREEDS = ['Duitse angora', 'Franse angora', 'Engelse angora', 'Satijn ango
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Ras</mat-label>
+          <mat-label>{{ 'animals.breed' | t }}</mat-label>
           <input matInput formControlName="breed" [matAutocomplete]="breeds" />
           <mat-autocomplete #breeds>
             @for (b of breedOptions; track b) {
@@ -70,62 +78,62 @@ const BREEDS = ['Duitse angora', 'Franse angora', 'Engelse angora', 'Satijn ango
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Kleur</mat-label>
+          <mat-label>{{ 'wools.color' | t }}</mat-label>
           <input matInput formControlName="color" />
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Geboortedatum</mat-label>
+          <mat-label>{{ 'animals.birthDate' | t }}</mat-label>
           <input matInput type="date" formControlName="birthDate" />
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Locatie</mat-label>
+          <mat-label>{{ 'harvest.location' | t }}</mat-label>
           <mat-select formControlName="locationId">
             <mat-option [value]="null">–</mat-option>
             @for (l of locations(); track l.id) {
               <mat-option [value]="l.id">{{ l.name }}</mat-option>
             }
           </mat-select>
-          <mat-hint><a routerLink="/locaties">Locaties beheren</a></mat-hint>
+          <mat-hint><a routerLink="/locaties">{{ 'animals.manageLocations' | t }}</a></mat-hint>
         </mat-form-field>
 
         <mat-form-field class="span-all">
-          <mat-label>Notities</mat-label>
+          <mat-label>{{ 'common.notes' | t }}</mat-label>
           <textarea matInput formControlName="notes" rows="3"></textarea>
         </mat-form-field>
       </div>
 
-      <mat-slide-toggle formControlName="active">Actief (nog in bezit)</mat-slide-toggle>
+      <mat-slide-toggle formControlName="active">{{ 'animals.active' | t }}</mat-slide-toggle>
 
       <div class="form-actions">
         @if (id()) {
-          <button mat-button type="button" (click)="remove()"><mat-icon>delete</mat-icon> Verwijderen</button>
+          <button mat-button type="button" (click)="remove()"><mat-icon>delete</mat-icon> {{ 'common.delete' | t }}</button>
         }
         <span class="spacer"></span>
-        <a mat-button routerLink="/dieren">Annuleren</a>
-        <button mat-flat-button type="submit" [disabled]="saving()">Opslaan</button>
+        <a mat-button routerLink="/dieren">{{ 'common.cancel' | t }}</a>
+        <button mat-flat-button type="submit" [disabled]="saving()">{{ 'common.save' | t }}</button>
       </div>
     </form>
 
     @if (id()) {
       <div class="page-header harvest-header">
-        <h2 class="section-title">Oogsten</h2>
-        <a mat-stroked-button routerLink="/productie/nieuw"><mat-icon>add</mat-icon> Oogst registreren</a>
+        <h2 class="section-title">{{ 'production.harvests' | t }}</h2>
+        <a mat-stroked-button routerLink="/productie/nieuw"><mat-icon>add</mat-icon> {{ 'production.register' | t }}</a>
       </div>
       @if (harvests().length) {
         <div class="table-wrap">
           <table mat-table [dataSource]="harvests()">
             <ng-container matColumnDef="date">
-              <th mat-header-cell *matHeaderCellDef>Datum</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'common.date' | t }}</th>
               <td mat-cell *matCellDef="let h">{{ h.date | date: 'd MMM y' }}</td>
             </ng-container>
             <ng-container matColumnDef="method">
-              <th mat-header-cell *matHeaderCellDef>Methode</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'harvest.method' | t }}</th>
               <td mat-cell *matCellDef="let h" class="muted">{{ h.method }}</td>
             </ng-container>
             <ng-container matColumnDef="weight">
-              <th mat-header-cell *matHeaderCellDef class="num">Gewicht</th>
+              <th mat-header-cell *matHeaderCellDef class="num">{{ 'common.weight' | t }}</th>
               <td mat-cell *matCellDef="let h" class="num">{{ h.weightGrams | grams }}</td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="['date', 'method', 'weight']"></tr>
@@ -134,7 +142,7 @@ const BREEDS = ['Duitse angora', 'Franse angora', 'Engelse angora', 'Satijn ango
           </table>
         </div>
       } @else {
-        <div class="empty">Nog geen oogsten voor dit dier.</div>
+        <div class="empty">{{ 'animals.noHarvests' | t }}</div>
       }
     }
   `,
@@ -152,15 +160,15 @@ export class AnimalForm implements OnInit {
 
   readonly id = input<string>();
 
-  protected readonly speciesOptions = SPECIES;
-  protected readonly breedOptions = BREEDS;
+  protected readonly speciesOptions = species();
+  protected readonly breedOptions = breeds();
   protected readonly locations = toSignal(this.api.locations.list(), { initialValue: [] });
   protected readonly harvests = signal<Harvest[]>([]);
   protected readonly saving = signal(false);
 
   protected readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
-    species: ['Konijn', [Validators.required, Validators.maxLength(100)]],
+    species: [t('animals.rabbit'), [Validators.required, Validators.maxLength(100)]],
     breed: [''],
     color: [''],
     birthDate: this.fb.control<string | null>(null),
@@ -213,7 +221,7 @@ export class AnimalForm implements OnInit {
 
   protected remove(): void {
     this.confirm
-      .ask('Dier verwijderen', `Weet je zeker dat je "${this.form.controls.name.value}" wilt verwijderen?`)
+      .ask(t('animals.deleteTitle'), t('common.deleteConfirm', { name: this.form.controls.name.value }))
       .pipe(
         filter(Boolean),
         switchMap(() => this.api.animals.delete(+this.id()!)),

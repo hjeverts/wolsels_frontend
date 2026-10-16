@@ -9,27 +9,28 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { filter, switchMap } from 'rxjs';
 import { AdminService } from '../../core/admin.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { AdminUser } from '../../core/models';
 import { ConfirmService } from '../../shared/confirm.service';
 
 @Component({
   selector: 'app-admin-users',
-  imports: [DatePipe, MatButtonModule, MatDividerModule, MatIconModule, MatMenuModule, MatTableModule, MatTooltipModule],
+  imports: [DatePipe, MatButtonModule, MatDividerModule, MatIconModule, MatMenuModule, MatTableModule, MatTooltipModule, TranslatePipe],
   template: `
     <div class="page-header">
-      <h1>Gebruikersbeheer</h1>
+      <h1>{{ 'admin.title' | t }}</h1>
     </div>
     <p class="muted">
-      Als beheerder beheer je de accounts. De gegevens van huishoudens (wol, mengsels, …) zijn hier bewust niet zichtbaar.
+      {{ 'admin.intro' | t }}
     </p>
 
     @if (resetLink(); as link) {
       <div class="reset-link">
-        <p><strong>Herstellink voor {{ link.email }}</strong> (één dag geldig, werkt één keer). Stuur deze zelf door:</p>
+        <p><strong>{{ 'admin.resetLinkFor' | t: { email: link.email } }}</strong> {{ 'admin.resetLinkNote' | t }}</p>
         <code>{{ link.url }}</code>
         <div class="form-actions start">
-          <button mat-flat-button (click)="copy(link.url)"><mat-icon>content_copy</mat-icon> Kopiëren</button>
-          <button mat-button (click)="resetLink.set(null)">Sluiten</button>
+          <button mat-flat-button (click)="copy(link.url)"><mat-icon>content_copy</mat-icon> {{ 'common.copy' | t }}</button>
+          <button mat-button (click)="resetLink.set(null)">{{ 'common.close' | t }}</button>
         </div>
       </div>
     }
@@ -37,21 +38,21 @@ import { ConfirmService } from '../../shared/confirm.service';
     <div class="table-wrap">
       <table mat-table [dataSource]="users()">
         <ng-container matColumnDef="email">
-          <th mat-header-cell *matHeaderCellDef>Account</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'admin.account' | t }}</th>
           <td mat-cell *matCellDef="let u">
             {{ u.email }}
             @if (u.isYou) {
-              <span class="muted">(jij)</span>
+              <span class="muted">{{ 'common.you' | t }}</span>
             }
             <div class="badges">
               @if (u.isAdmin) {
-                <span class="badge admin">Beheerder</span>
+                <span class="badge admin">{{ 'admin.isAdmin' | t }}</span>
               }
               @if (u.blocked) {
-                <span class="badge blocked">Geblokkeerd</span>
+                <span class="badge blocked">{{ 'admin.blocked' | t }}</span>
               } @else if (u.lockedOutUntil) {
-                <span class="badge blocked" [matTooltip]="'Na te veel foute pogingen, tot ' + (u.lockedOutUntil | date: 'HH:mm')">
-                  Tijdelijk vergrendeld
+                <span class="badge blocked" [matTooltip]="'admin.lockedOutUntil' | t: { time: (u.lockedOutUntil | date: 'HH:mm') }">
+                  {{ 'admin.lockedOut' | t }}
                 </span>
               }
             </div>
@@ -60,41 +61,41 @@ import { ConfirmService } from '../../shared/confirm.service';
         <ng-container matColumnDef="twoFactor">
           <th mat-header-cell *matHeaderCellDef>2FA</th>
           <td mat-cell *matCellDef="let u">
-            <mat-icon [class.on]="u.twoFactorEnabled" [matTooltip]="u.twoFactorEnabled ? 'Aan' : 'Uit'">
+            <mat-icon [class.on]="u.twoFactorEnabled" [matTooltip]="(u.twoFactorEnabled ? 'common.on' : 'common.off') | t">
               {{ u.twoFactorEnabled ? 'verified_user' : 'remove_moderator' }}
             </mat-icon>
           </td>
         </ng-container>
         <ng-container matColumnDef="households">
-          <th mat-header-cell *matHeaderCellDef>Huishoudens</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'admin.households' | t }}</th>
           <td mat-cell *matCellDef="let u" class="muted">{{ u.households.join(', ') }}</td>
         </ng-container>
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let u" class="num">
-            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Acties"><mat-icon>more_vert</mat-icon></button>
+            <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="'common.actions' | t"><mat-icon>more_vert</mat-icon></button>
             <mat-menu #menu="matMenu" xPosition="before">
               <button mat-menu-item (click)="createResetLink(u)">
-                <mat-icon>password</mat-icon><span>Herstellink voor wachtwoord</span>
+                <mat-icon>password</mat-icon><span>{{ 'admin.passwordResetLink' | t }}</span>
               </button>
               @if (u.twoFactorEnabled) {
                 <button mat-menu-item (click)="resetTwoFactor(u)">
-                  <mat-icon>phonelink_erase</mat-icon><span>2FA resetten</span>
+                  <mat-icon>phonelink_erase</mat-icon><span>{{ 'admin.resetTwoFactor' | t }}</span>
                 </button>
               }
               @if (!u.isYou) {
                 <button mat-menu-item (click)="toggleBlock(u)">
                   <mat-icon>{{ u.blocked ? 'lock_open' : 'block' }}</mat-icon>
-                  <span>{{ u.blocked ? 'Deblokkeren' : 'Blokkeren' }}</span>
+                  <span>{{ (u.blocked ? 'admin.unblock' : 'admin.block') | t }}</span>
                 </button>
               }
               <button mat-menu-item (click)="toggleAdmin(u)">
                 <mat-icon>{{ u.isAdmin ? 'remove_moderator' : 'admin_panel_settings' }}</mat-icon>
-                <span>{{ u.isAdmin ? 'Beheerder afnemen' : 'Beheerder maken' }}</span>
+                <span>{{ (u.isAdmin ? 'admin.revokeAdmin' : 'admin.makeAdmin') | t }}</span>
               </button>
               @if (!u.isYou) {
                 <mat-divider />
-                <button mat-menu-item (click)="remove(u)"><mat-icon>delete</mat-icon><span>Account verwijderen</span></button>
+                <button mat-menu-item (click)="remove(u)"><mat-icon>delete</mat-icon><span>{{ 'admin.deleteAccount' | t }}</span></button>
               }
             </mat-menu>
           </td>
@@ -165,25 +166,25 @@ export class AdminUsers {
 
   protected resetTwoFactor(user: AdminUser): void {
     this.confirm
-      .ask('2FA resetten', `Tweestapsverificatie van ${user.email} wordt uitgeschakeld. Doe dit alleen als je zeker weet dat de aanvraag echt van die persoon komt.`, 'Resetten')
+      .ask(t('admin.resetTwoFactor'), t('admin.resetTwoFactorConfirm', { email: user.email }), t('admin.reset'))
       .pipe(filter(Boolean), switchMap(() => this.admin.resetTwoFactor(user.id)))
-      .subscribe(() => this.done('2FA is uitgeschakeld.'));
+      .subscribe(() => this.done(t('admin.twoFactorReset')));
   }
 
   protected toggleBlock(user: AdminUser): void {
     const block = !user.blocked;
     this.confirm
       .ask(
-        block ? 'Account blokkeren' : 'Account deblokkeren',
-        block ? `${user.email} wordt direct uitgelogd en kan niet meer inloggen.` : `${user.email} kan weer inloggen.`,
-        block ? 'Blokkeren' : 'Deblokkeren',
+        t(block ? 'admin.blockTitle' : 'admin.unblockTitle'),
+        t(block ? 'admin.blockConfirm' : 'admin.unblockConfirm', { email: user.email }),
+        t(block ? 'admin.block' : 'admin.unblock'),
       )
       .pipe(filter(Boolean), switchMap(() => this.admin.block(user.id, block)))
-      .subscribe(() => this.done(block ? 'Account geblokkeerd.' : 'Account gedeblokkeerd.'));
+      .subscribe(() => this.done(t(block ? 'admin.accountBlocked' : 'admin.accountUnblocked')));
   }
 
   protected toggleAdmin(user: AdminUser): void {
-    this.admin.setAdmin(user.id, !user.isAdmin).subscribe(() => this.done(user.isAdmin ? 'Beheerdersrechten afgenomen.' : 'Beheerder gemaakt.'));
+    this.admin.setAdmin(user.id, !user.isAdmin).subscribe(() => this.done(t(user.isAdmin ? 'admin.adminRevoked' : 'admin.adminGranted')));
   }
 
   protected remove(user: AdminUser): void {
@@ -193,22 +194,26 @@ export class AdminUsers {
         switchMap((preview) => {
           const lost = preview.householdsDeleted;
           const detail = lost.length
-            ? ` Ook ${lost.map((h) => `"${h.name}" (${h.items} items)`).join(', ')} wordt verwijderd, omdat ${user.email} daar het enige lid van is.`
-            : ' Gedeelde huishoudens blijven voor de andere leden bestaan.';
-          return this.confirm.ask('Account verwijderen', `${user.email} wordt definitief verwijderd.${detail}`);
+            ? t('admin.deleteAlsoHouseholds', {
+                count: lost.length,
+                households: lost.map((h) => t('admin.householdItems', { name: h.name, count: h.items })).join(', '),
+                email: user.email,
+              })
+            : t('admin.deleteSharedRemain');
+          return this.confirm.ask(t('admin.deleteAccount'), `${t('admin.deleteConfirm', { email: user.email })} ${detail}`);
         }),
         filter(Boolean),
         switchMap(() => this.admin.delete(user.id)),
       )
-      .subscribe(() => this.done('Account verwijderd.'));
+      .subscribe(() => this.done(t('admin.accountDeleted')));
   }
 
   protected async copy(text: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(text);
-      this.snackBar.open('Gekopieerd.', undefined, { duration: 3000 });
+      this.snackBar.open(t('common.copied'), undefined, { duration: 3000 });
     } catch {
-      this.snackBar.open('Kopiëren lukte niet; selecteer de link en kopieer hem zelf.', 'Sluiten', { duration: 5000 });
+      this.snackBar.open(t('common.copyFailed'), t('common.close'), { duration: 5000 });
     }
   }
 

@@ -1,3 +1,5 @@
+import { t } from './i18n/i18n';
+
 /** Garendiktes met een indicatie van wraps per inch (WPI). */
 export const YARN_WEIGHTS: { name: string; minWpi: number; maxWpi: number }[] = [
   { name: 'Lace', minWpi: 30, maxWpi: 99 },
@@ -16,18 +18,19 @@ export function yarnWeightForWpi(wpi: number | null | undefined): string | null 
   return YARN_WEIGHTS.find((y) => wpi >= y.minWpi && wpi <= y.maxWpi)?.name ?? null;
 }
 
-export const PLY_METHODS = [
-  'Enkeldraads',
-  '2-draads',
-  '3-draads',
-  'Kettinggetwijnd (Navajo)',
+/** Suggesties bij het invullen (vrije tekst), in de taal van de app. */
+export const plyMethods = () => [
+  t('yarn.singles'),
+  t('yarn.twoPly'),
+  t('yarn.threePly'),
+  t('yarn.chainPly'),
   'Cabled',
   'Bouclé',
   'Art yarn',
 ];
 
-export const DYE_PRODUCTS = ['Zuurverf', 'Plantaardig: meekrap', 'Plantaardig: wouw', 'Indigo', 'Kool-Aid / voedingskleurstof'];
+export const dyeProducts = () => [t('yarn.acidDye'), t('yarn.madder'), t('yarn.weld'), 'Indigo', t('yarn.foodColoring')];
 
-export const HARVEST_METHODS = ['Plukken', 'Scheren', 'Kammen'];
+export const harvestMethods = () => [t('harvest.methodPlucking'), t('harvest.methodShearing'), t('harvest.methodCombing')];
 
-export const HARVEST_GRADES = ['1e keus', '2e keus', '3e keus', 'Vilt'];
+export const harvestGrades = () => [t('harvest.gradeFirst'), t('harvest.gradeSecond'), t('harvest.gradeThird'), t('harvest.gradeFelt')];

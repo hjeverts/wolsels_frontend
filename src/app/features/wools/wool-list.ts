@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { TranslatePipe } from '../../core/i18n/i18n';
 import { Wool } from '../../core/models';
 import { swatchColor } from '../../shared/color-names';
 import { ColorSwatch } from '../../shared/color-swatch';
@@ -22,40 +23,41 @@ import { GramsPipe } from '../../shared/grams.pipe';
     MatInputModule,
     ColorSwatch,
     GramsPipe,
+    TranslatePipe,
   ],
   template: `
     <div class="page-header">
-      <h1>Wolvoorraad</h1>
-      <a mat-flat-button routerLink="/voorraad/nieuw"><mat-icon>add</mat-icon> Wol toevoegen</a>
+      <h1>{{ 'wools.title' | t }}</h1>
+      <a mat-flat-button routerLink="/voorraad/nieuw"><mat-icon>add</mat-icon> {{ 'wools.add' | t }}</a>
     </div>
 
     @if (wools(); as all) {
       @if (all.length) {
         <div class="stat-row">
           <div class="stat">
-            <div class="label">Totaal op voorraad</div>
+            <div class="label">{{ 'wools.totalInStock' | t }}</div>
             <div class="value">{{ totalWeight() | grams }}</div>
           </div>
           <div class="stat">
-            <div class="label">Partijen</div>
+            <div class="label">{{ 'wools.lots' | t }}</div>
             <div class="value">{{ all.length }}</div>
           </div>
           <div class="stat">
-            <div class="label">Wolsoorten</div>
+            <div class="label">{{ 'wools.types' | t }}</div>
             <div class="value">{{ typeCount() }}</div>
           </div>
         </div>
 
         <mat-form-field class="filter" subscriptSizing="dynamic">
-          <mat-label>Zoeken</mat-label>
+          <mat-label>{{ 'common.search' | t }}</mat-label>
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput [value]="filter()" (input)="filter.set($any($event.target).value)" placeholder="Naam, soort of kleur" />
+          <input matInput [value]="filter()" (input)="filter.set($any($event.target).value)" [placeholder]="'wools.searchPlaceholder' | t" />
         </mat-form-field>
 
         <div class="table-wrap">
           <table mat-table [dataSource]="filtered()">
             <ng-container matColumnDef="photo">
-              <th mat-header-cell *matHeaderCellDef class="photo-cell"><span class="cdk-visually-hidden">Foto</span></th>
+              <th mat-header-cell *matHeaderCellDef class="photo-cell"><span class="cdk-visually-hidden">{{ 'wools.photo' | t }}</span></th>
               <td mat-cell *matCellDef="let w" class="photo-cell">
                 @if (w.photoIds.length) {
                   <img class="thumb" [src]="thumbnailUrl(w)" alt="" loading="lazy" />
@@ -63,36 +65,36 @@ import { GramsPipe } from '../../shared/grams.pipe';
               </td>
             </ng-container>
             <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Naam</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'common.name' | t }}</th>
               <td mat-cell *matCellDef="let w">
                 <span class="inline"><app-color-swatch [color]="swatch(w)" [label]="w.color" /> {{ w.name }}</span>
               </td>
             </ng-container>
             <ng-container matColumnDef="woolType">
-              <th mat-header-cell *matHeaderCellDef>Wolsoort</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'wools.woolType' | t }}</th>
               <td mat-cell *matCellDef="let w">{{ w.woolType }}</td>
             </ng-container>
             <ng-container matColumnDef="color">
-              <th mat-header-cell *matHeaderCellDef>Kleur</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'wools.color' | t }}</th>
               <td mat-cell *matCellDef="let w">{{ w.color }}</td>
             </ng-container>
             <ng-container matColumnDef="origin">
-              <th mat-header-cell *matHeaderCellDef>Herkomst</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'wools.origin' | t }}</th>
               <td mat-cell *matCellDef="let w" class="muted">{{ w.origin }}</td>
             </ng-container>
             <ng-container matColumnDef="weight">
-              <th mat-header-cell *matHeaderCellDef class="num">Gewicht</th>
+              <th mat-header-cell *matHeaderCellDef class="num">{{ 'common.weight' | t }}</th>
               <td mat-cell *matCellDef="let w" class="num">{{ w.weightGrams | grams }}</td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="columns()"></tr>
             <tr mat-row *matRowDef="let w; columns: columns()" class="clickable" (click)="open(w)"></tr>
           </table>
           @if (!filtered().length) {
-            <div class="empty">Geen wol gevonden voor "{{ filter() }}".</div>
+            <div class="empty">{{ 'wools.noneFound' | t: { term: filter() } }}</div>
           }
         </div>
       } @else {
-        <div class="empty">Nog geen wol op voorraad. Voeg je eerste partij toe.</div>
+        <div class="empty">{{ 'wools.empty' | t }}</div>
       }
     }
   `,

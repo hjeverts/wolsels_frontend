@@ -1,6 +1,7 @@
 import { Component, Signal, computed, input, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
+import { TranslatePipe } from '../core/i18n/i18n';
 import { guessColorHex } from './color-names';
 import { ColorSwatch } from './color-swatch';
 
@@ -59,10 +60,10 @@ export class AutoColor {
 /** Het bolletje met een (onzichtbare) kleurkiezer erover; gebruik als matSuffix in een kleurveld. */
 @Component({
   selector: 'app-color-pick',
-  imports: [ColorSwatch],
+  imports: [ColorSwatch, TranslatePipe],
   template: `
     <app-color-swatch [color]="color().hex()" />
-    <input type="color" aria-label="Kleurcode kiezen" [value]="color().hex() || '#ffffff'" (input)="color().pick($any($event.target).value)" />
+    <input type="color" [attr.aria-label]="'color.pick' | t" [value]="color().hex() || '#ffffff'" (input)="color().pick($any($event.target).value)" />
   `,
   styles: `
     :host {
@@ -85,17 +86,18 @@ export class ColorPick {
 /** Uitleg onder een kleurveld: volgt de naam, niet herkend, of zelf gekozen (met de weg terug). */
 @Component({
   selector: 'app-color-hint',
+  imports: [TranslatePipe],
   template: `
     @switch (color().state()) {
       @case ('manual') {
-        Zelf gekozen kleur ·
-        <button type="button" (click)="color().follow()">volg de kleurnaam</button>
+        {{ 'color.manual' | t }} ·
+        <button type="button" (click)="color().follow()">{{ 'color.follow' | t }}</button>
       }
       @case ('unknown') {
-        Niet herkend; kies via het bolletje
+        {{ 'color.unknown' | t }}
       }
       @default {
-        Bolletje volgt de kleurnaam
+        {{ 'color.auto' | t }}
       }
     }
   `,

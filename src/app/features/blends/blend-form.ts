@@ -16,8 +16,9 @@ import { Router, RouterLink } from '@angular/router';
 import { combineLatest, filter, map, startWith, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { CalculationInput, calculateBlend } from '../../core/blend-calculator';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { Blend, BlendStatus, SpinDirection, Wool } from '../../core/models';
-import { DYE_PRODUCTS, PLY_METHODS, YARN_WEIGHTS, yarnWeightForWpi } from '../../core/yarn';
+import { YARN_WEIGHTS, dyeProducts, plyMethods, yarnWeightForWpi } from '../../core/yarn';
 import { AutoColor, ColorHint, ColorPick } from '../../shared/auto-color';
 import { swatchColor } from '../../shared/color-names';
 import { ColorSwatch } from '../../shared/color-swatch';
@@ -54,6 +55,7 @@ type ComponentGroup = FormGroup<{
     ColorPick,
     ColorSwatch,
     GramsPipe,
+    TranslatePipe,
   ],
   templateUrl: './blend-form.html',
   styleUrl: './blend-form.scss',
@@ -68,8 +70,6 @@ export class BlendForm implements OnInit {
   protected readonly swatch = (w: Wool) => swatchColor(w.colorHex, w.color);
 
   protected readonly yarnWeights = YARN_WEIGHTS;
-  protected readonly plyMethods = PLY_METHODS;
-  protected readonly dyeProducts = DYE_PRODUCTS;
 
   protected readonly wools = toSignal(this.api.wools.list(), { initialValue: [] as Wool[] });
   protected readonly maxComponents = toSignal(this.api.settings$.pipe(map((s) => s.maxBlendComponents)), {
@@ -145,9 +145,9 @@ export class BlendForm implements OnInit {
   });
 
   private readonly plyInput = toSignal(this.form.controls.plyMethod.valueChanges, { initialValue: '' });
-  protected readonly plySuggestions = computed(() => filterOptions(PLY_METHODS, this.plyInput()));
+  protected readonly plySuggestions = computed(() => filterOptions(plyMethods(), this.plyInput()));
   private readonly dyeInput = toSignal(this.form.controls.dyeProduct.valueChanges, { initialValue: '' });
-  protected readonly dyeSuggestions = computed(() => filterOptions(DYE_PRODUCTS, this.dyeInput()));
+  protected readonly dyeSuggestions = computed(() => filterOptions(dyeProducts(), this.dyeInput()));
 
   private loadedBlend: Blend | null = null;
 
@@ -328,9 +328,9 @@ export class BlendForm implements OnInit {
   protected remove(): void {
     this.confirm
       .ask(
-        'Mengsel verwijderen',
-        `Weet je zeker dat je "${this.loadedBlend?.name}" wilt verwijderen?` +
-          (this.loadedBlend?.stockDeducted ? ' De afgeboekte wol gaat terug naar de voorraad.' : ''),
+        t('blends.deleteTitle'),
+        t('common.deleteConfirm', { name: this.loadedBlend?.name }) +
+          (this.loadedBlend?.stockDeducted ? ` ${t('blends.deleteReturnsStock')}` : ''),
       )
       .pipe(
         filter(Boolean),
@@ -341,6 +341,6 @@ export class BlendForm implements OnInit {
 }
 
 function filterOptions(options: string[], term: string | null): string[] {
-  const t = (term ?? '').toLowerCase();
-  return options.filter((o) => o.toLowerCase().includes(t));
+  const lower = (term ?? '').toLowerCase();
+  return options.filter((o) => o.toLowerCase().includes(lower));
 }

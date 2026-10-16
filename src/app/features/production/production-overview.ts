@@ -9,10 +9,15 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { TranslatePipe, currentLocale } from '../../core/i18n/i18n';
 import { Harvest } from '../../core/models';
 import { GramsPipe } from '../../shared/grams.pipe';
 
-const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+/** Korte maandnamen in de taal van de app. */
+const monthName = (month: number, year?: number) =>
+  new Intl.DateTimeFormat(currentLocale(), year ? { month: 'short', year: 'numeric' } : { month: 'short' }).format(
+    new Date(year ?? 2000, month - 1, 1),
+  );
 
 @Component({
   selector: 'app-production-overview',
@@ -26,36 +31,37 @@ const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', '
     MatSelectModule,
     MatTableModule,
     GramsPipe,
+    TranslatePipe,
   ],
   template: `
     <div class="page-header">
-      <h1>Productie ruwe wol</h1>
+      <h1>{{ 'production.title' | t }}</h1>
       <div class="inline">
         <mat-form-field subscriptSizing="dynamic" class="year">
-          <mat-label>Jaar</mat-label>
+          <mat-label>{{ 'production.year' | t }}</mat-label>
           <mat-select [value]="year()" (selectionChange)="year.set($event.value)">
-            <mat-option [value]="0">Alle jaren</mat-option>
+            <mat-option [value]="0">{{ 'production.allYears' | t }}</mat-option>
             @for (y of years; track y) {
               <mat-option [value]="y">{{ y }}</mat-option>
             }
           </mat-select>
         </mat-form-field>
-        <a mat-flat-button routerLink="/productie/nieuw"><mat-icon>add</mat-icon> Oogst registreren</a>
+        <a mat-flat-button routerLink="/productie/nieuw"><mat-icon>add</mat-icon> {{ 'production.register' | t }}</a>
       </div>
     </div>
 
     @if (summary.value(); as s) {
       <div class="stat-row">
         <div class="stat">
-          <div class="label">Totaal geoogst</div>
+          <div class="label">{{ 'production.totalHarvested' | t }}</div>
           <div class="value">{{ s.totalGrams | grams }}</div>
         </div>
         <div class="stat">
-          <div class="label">Oogstmomenten</div>
+          <div class="label">{{ 'production.harvestCount' | t }}</div>
           <div class="value">{{ s.harvestCount }}</div>
         </div>
         <div class="stat">
-          <div class="label">Gemiddeld per oogst</div>
+          <div class="label">{{ 'production.average' | t }}</div>
           <div class="value">{{ s.harvestCount ? s.totalGrams / s.harvestCount : null | grams }}</div>
         </div>
       </div>
@@ -64,7 +70,7 @@ const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', '
         <div class="charts">
           <mat-card appearance="outlined">
             <mat-card-content>
-              <h2 class="section-title">Per maand</h2>
+              <h2 class="section-title">{{ 'production.perMonth' | t }}</h2>
               <div class="bars">
                 @for (m of months(); track m.label) {
                   <div class="bar-row">
@@ -79,7 +85,7 @@ const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', '
 
           <mat-card appearance="outlined">
             <mat-card-content>
-              <h2 class="section-title">Per dier / locatie</h2>
+              <h2 class="section-title">{{ 'production.perSource' | t }}</h2>
               <div class="bars">
                 @for (src of sources(); track src.kind + src.id) {
                   <div class="bar-row">
@@ -98,17 +104,17 @@ const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', '
       }
     }
 
-    <h2 class="section-title">Oogsten</h2>
+    <h2 class="section-title">{{ 'production.harvests' | t }}</h2>
     @if (harvests.value(); as list) {
       @if (list.length) {
         <div class="table-wrap">
           <table mat-table [dataSource]="list">
             <ng-container matColumnDef="date">
-              <th mat-header-cell *matHeaderCellDef>Datum</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'common.date' | t }}</th>
               <td mat-cell *matCellDef="let h">{{ h.date | date: 'd MMM y' }}</td>
             </ng-container>
             <ng-container matColumnDef="source">
-              <th mat-header-cell *matHeaderCellDef>Dier / locatie</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'harvest.animalOrLocation' | t }}</th>
               <td mat-cell *matCellDef="let h">
                 <span class="inline">
                   <mat-icon inline class="muted">{{ h.animalId ? 'cruelty_free' : 'location_on' }}</mat-icon>
@@ -117,15 +123,15 @@ const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', '
               </td>
             </ng-container>
             <ng-container matColumnDef="method">
-              <th mat-header-cell *matHeaderCellDef>Methode</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'harvest.method' | t }}</th>
               <td mat-cell *matCellDef="let h" class="muted">{{ h.method }}</td>
             </ng-container>
             <ng-container matColumnDef="grade">
-              <th mat-header-cell *matHeaderCellDef>Kwaliteit</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'harvest.grade' | t }}</th>
               <td mat-cell *matCellDef="let h" class="muted">{{ h.grade }}</td>
             </ng-container>
             <ng-container matColumnDef="stock">
-              <th mat-header-cell *matHeaderCellDef>Voorraad</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'nav.stock' | t }}</th>
               <td mat-cell *matCellDef="let h">
                 @if (h.woolName) {
                   <span class="inline"><mat-icon inline class="in-stock">inventory_2</mat-icon> {{ h.woolName }}</span>
@@ -135,7 +141,7 @@ const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', '
               </td>
             </ng-container>
             <ng-container matColumnDef="weight">
-              <th mat-header-cell *matHeaderCellDef class="num">Gewicht</th>
+              <th mat-header-cell *matHeaderCellDef class="num">{{ 'common.weight' | t }}</th>
               <td mat-cell *matCellDef="let h" class="num">{{ h.weightGrams | grams }}</td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="columns"></tr>
@@ -144,8 +150,10 @@ const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', '
         </div>
       } @else {
         <div class="empty">
-          Nog geen oogsten geregistreerd{{ year() ? ' in ' + year() : '' }}.
-          <br />Maak eerst <a routerLink="/dieren/nieuw">dieren</a> of <a routerLink="/locaties">locaties</a> aan.
+          {{ year() ? ('production.emptyYear' | t: { year: year() }) : ('production.empty' | t) }}
+          <br />{{ 'production.createFirst' | t }}
+          <a routerLink="/dieren/nieuw">{{ 'animals.add' | t }}</a> ·
+          <a routerLink="/locaties">{{ 'animals.manageLocations' | t }}</a>
         </div>
       }
     }
@@ -216,7 +224,7 @@ export class ProductionOverview {
     const max = Math.max(...perMonth.map((m) => m.totalGrams), 1);
     const multiYear = new Set(perMonth.map((m) => m.year)).size > 1;
     return perMonth.map((m) => ({
-      label: multiYear ? `${MONTHS[m.month - 1]} ${m.year}` : MONTHS[m.month - 1],
+      label: multiYear ? monthName(m.month, m.year) : monthName(m.month),
       totalGrams: m.totalGrams,
       share: (m.totalGrams / max) * 100,
     }));

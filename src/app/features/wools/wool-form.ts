@@ -15,6 +15,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
 import { EMPTY, Observable, catchError, concatMap, filter, from, map, of, switchMap, toArray } from 'rxjs';
 import { ApiService } from '../../core/api.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { Harvest, Wool } from '../../core/models';
 import { AutoColor, ColorHint, ColorPick } from '../../shared/auto-color';
 import { swatchColor } from '../../shared/color-names';
@@ -32,7 +33,7 @@ type PhotoItem =
   | { kind: 'saved'; id: number }
   | { kind: 'pending'; key: number; resized: ResizedPhoto; thumbnailUrl: string; photoUrl: string };
 
-const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', 'BFL', 'Gotland', 'Zijde', 'Kasjmier', 'Yak'];
+const commonWoolTypes = () => ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', 'BFL', 'Gotland', t('wools.silk'), t('wools.cashmere'), 'Yak'];
 
 @Component({
   selector: 'app-wool-form',
@@ -52,21 +53,22 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
     ColorPick,
     ColorSwatch,
     GramsPipe,
+    TranslatePipe,
   ],
   template: `
     <div class="page-header">
-      <h1>{{ id() ? 'Wol bewerken' : 'Wol toevoegen' }}</h1>
+      <h1>{{ (id() ? 'wools.edit' : 'wools.add') | t }}</h1>
     </div>
 
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-grid">
         <mat-form-field class="span-all">
-          <mat-label>Naam</mat-label>
-          <input matInput formControlName="name" placeholder="bv. Merino lontwol wit" required />
+          <mat-label>{{ 'common.name' | t }}</mat-label>
+          <input matInput formControlName="name" [placeholder]="'wools.namePlaceholder' | t" required />
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Wolsoort</mat-label>
+          <mat-label>{{ 'wools.woolType' | t }}</mat-label>
           <input matInput formControlName="woolType" [matAutocomplete]="types" required />
           <mat-autocomplete #types>
             @for (type of woolTypes(); track type) {
@@ -76,37 +78,37 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
         </mat-form-field>
 
         <mat-form-field subscriptSizing="dynamic">
-          <mat-label>Kleur</mat-label>
-          <input matInput formControlName="color" placeholder="bv. Naturel, Bruin" required />
+          <mat-label>{{ 'wools.color' | t }}</mat-label>
+          <input matInput formControlName="color" [placeholder]="'wools.colorPlaceholder' | t" required />
           <app-color-pick matSuffix [color]="autoColor" />
           <mat-hint><app-color-hint [color]="autoColor" /></mat-hint>
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Gewicht op voorraad</mat-label>
+          <mat-label>{{ 'wools.weightInStock' | t }}</mat-label>
           <input matInput type="number" min="0" step="0.1" formControlName="weightGrams" required />
           <span matTextSuffix>g</span>
         </mat-form-field>
 
         <mat-form-field>
-          <mat-label>Herkomst / leverancier</mat-label>
+          <mat-label>{{ 'wools.originSupplier' | t }}</mat-label>
           <input matInput formControlName="origin" />
         </mat-form-field>
 
         <mat-form-field class="span-all">
-          <mat-label>Notities</mat-label>
+          <mat-label>{{ 'common.notes' | t }}</mat-label>
           <textarea matInput formControlName="notes" rows="3"></textarea>
         </mat-form-field>
       </div>
 
-      <h2 class="section-title extra"><mat-icon>photo_camera</mat-icon> Foto's</h2>
+      <h2 class="section-title extra"><mat-icon>photo_camera</mat-icon> {{ 'wools.photos' | t }}</h2>
       <div class="photos">
         @for (p of photos(); track trackPhoto(p)) {
           <div class="photo">
-            <button type="button" class="thumb" (click)="openPhoto(p)" [attr.aria-label]="'Foto ' + ($index + 1) + ' vergroten'">
+            <button type="button" class="thumb" (click)="openPhoto(p)" [attr.aria-label]="'wools.enlargePhoto' | t: { n: $index + 1 }">
               <img [src]="thumbnailUrl(p)" alt="" loading="lazy" />
             </button>
-            <button mat-icon-button type="button" class="remove" (click)="removePhoto(p)" [disabled]="saving()" aria-label="Foto verwijderen">
+            <button mat-icon-button type="button" class="remove" (click)="removePhoto(p)" [disabled]="saving()" [attr.aria-label]="'wools.deletePhoto' | t">
               <mat-icon>close</mat-icon>
             </button>
           </div>
@@ -118,61 +120,60 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
               <mat-spinner diameter="28" />
             } @else {
               <mat-icon>add_a_photo</mat-icon>
-              <span>Foto toevoegen</span>
+              <span>{{ 'wools.addPhoto' | t }}</span>
             }
           </button>
         }
       </div>
       <p class="muted small">
-        Foto's worden verkleind tot maximaal 1600 pixels; locatiegegevens uit de foto worden niet bewaard.
+        {{ 'wools.photosNote' | t }}
         @if (!id() && photos().length) {
-          Ze worden geüpload als je de partij opslaat.
+          {{ 'wools.photosUploadOnSave' | t }}
         }
       </p>
 
       <div class="form-actions">
         @if (id()) {
-          <button mat-button type="button" (click)="remove()"><mat-icon>delete</mat-icon> Verwijderen</button>
+          <button mat-button type="button" (click)="remove()"><mat-icon>delete</mat-icon> {{ 'common.delete' | t }}</button>
         }
         <span class="spacer"></span>
-        <a mat-button routerLink="/voorraad">Annuleren</a>
-        <button mat-flat-button type="submit" [disabled]="saving() || processing()">Opslaan</button>
+        <a mat-button routerLink="/voorraad">{{ 'common.cancel' | t }}</a>
+        <button mat-flat-button type="submit" [disabled]="saving() || processing()">{{ 'common.save' | t }}</button>
       </div>
     </form>
 
     @if (id()) {
       @if (harvests().length) {
-        <h2 class="section-title extra"><mat-icon>agriculture</mat-icon> Opgebouwd uit oogsten</h2>
+        <h2 class="section-title extra"><mat-icon>agriculture</mat-icon> {{ 'wools.fromHarvests' | t }}</h2>
         <div class="table-wrap">
           <table mat-table [dataSource]="harvests()">
             <ng-container matColumnDef="date">
-              <th mat-header-cell *matHeaderCellDef>Datum</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'common.date' | t }}</th>
               <td mat-cell *matCellDef="let h">{{ h.date | date: 'd MMM y' }}</td>
             </ng-container>
             <ng-container matColumnDef="source">
-              <th mat-header-cell *matHeaderCellDef>Dier / locatie</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'harvest.animalOrLocation' | t }}</th>
               <td mat-cell *matCellDef="let h">{{ h.animalName ?? h.locationName }}</td>
             </ng-container>
             <ng-container matColumnDef="weight">
-              <th mat-header-cell *matHeaderCellDef class="num">Gewicht</th>
+              <th mat-header-cell *matHeaderCellDef class="num">{{ 'common.weight' | t }}</th>
               <td mat-cell *matCellDef="let h" class="num">{{ h.weightGrams | grams }}</td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="harvestColumns"></tr>
             <tr mat-row *matRowDef="let h; columns: harvestColumns" class="clickable" [routerLink]="['/productie', h.id]"></tr>
           </table>
         </div>
-        <p class="muted small">Samen {{ harvestTotal() | grams }} geoogst. De voorraad kan lager zijn als er al wol is gebruikt.</p>
+        <p class="muted small">{{ 'wools.harvestedTotal' | t: { weight: (harvestTotal() | grams) } }}</p>
       }
 
       @if (mergeCandidates().length) {
-        <h2 class="section-title extra"><mat-icon>call_merge</mat-icon> Samenvoegen</h2>
+        <h2 class="section-title extra"><mat-icon>call_merge</mat-icon> {{ 'wools.merge' | t }}</h2>
         <p class="muted">
-          Voeg deze partij samen met een andere, bijvoorbeeld alle oogsten van één dier. Het gewicht gaat over naar de
-          gekozen partij, en oogsten en mengsels die naar deze partij verwijzen gaan mee. Deze partij verdwijnt daarna.
+          {{ 'wools.mergeIntro' | t }}
         </p>
         <div class="merge">
           <mat-form-field subscriptSizing="dynamic">
-            <mat-label>Samenvoegen met</mat-label>
+            <mat-label>{{ 'wools.mergeWith' | t }}</mat-label>
             <mat-select [value]="mergeTarget()" (selectionChange)="mergeTarget.set($event.value)">
               @for (w of mergeCandidates(); track w.id) {
                 <mat-option [value]="w.id">
@@ -183,7 +184,7 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
             </mat-select>
           </mat-form-field>
           <button mat-stroked-button type="button" (click)="merge()" [disabled]="!mergeTarget()">
-            <mat-icon>call_merge</mat-icon> Samenvoegen
+            <mat-icon>call_merge</mat-icon> {{ 'wools.merge' | t }}
           </button>
         </div>
       }
@@ -303,8 +304,8 @@ export class WoolForm implements OnInit {
   private readonly typeInput = toSignal(this.form.controls.woolType.valueChanges, { initialValue: '' });
   protected readonly woolTypes = computed(() => {
     const term = this.typeInput().toLowerCase();
-    return [...new Set([...this.existingTypes(), ...COMMON_WOOL_TYPES])]
-      .filter((t) => t.toLowerCase().includes(term))
+    return [...new Set([...this.existingTypes(), ...commonWoolTypes()])]
+      .filter((type) => type.toLowerCase().includes(term))
       .sort((a, b) => a.localeCompare(b));
   });
 
@@ -341,7 +342,7 @@ export class WoolForm implements OnInit {
     const name = this.form.controls.name.value.trim();
     this.dialog.open(PhotoDialog, {
       data: { src, alt: name },
-      ariaLabel: name ? `Foto van ${name}` : 'Foto',
+      ariaLabel: name ? t('wools.photoOf', { name }) : t('wools.photo'),
       maxWidth: '95vw',
     });
   }
@@ -381,7 +382,7 @@ export class WoolForm implements OnInit {
       }
     } catch (e) {
       // Fouten van de server toont de error-interceptor al.
-      if (e instanceof ImageResizeError) this.snackBar.open(e.message, 'Sluiten', { duration: 8000 });
+      if (e instanceof ImageResizeError) this.snackBar.open(e.message, t('common.close'), { duration: 8000 });
     } finally {
       this.processing.set(false);
     }
@@ -395,7 +396,7 @@ export class WoolForm implements OnInit {
       return;
     }
     this.confirm
-      .ask('Foto verwijderen', 'Weet je zeker dat je deze foto wilt verwijderen?')
+      .ask(t('wools.deletePhoto'), t('wools.deletePhotoConfirm'))
       .pipe(
         filter(Boolean),
         switchMap(() => this.api.wools.deletePhoto(+this.id()!, p.id)),
@@ -462,12 +463,12 @@ export class WoolForm implements OnInit {
     const v = this.form.getRawValue();
     const differs =
       target.woolType.toLowerCase() !== v.woolType.trim().toLowerCase() || target.color.toLowerCase() !== v.color.trim().toLowerCase();
-    const warning = differs ? ` Let op: de wolsoort of kleur verschilt (${target.woolType}, ${target.color}).` : '';
+    const warning = differs ? ` ${t('wools.mergeDiffers', { type: target.woolType, color: target.color })}` : '';
     this.confirm
       .ask(
-        'Partijen samenvoegen',
-        `"${v.name}" (${v.weightGrams ?? 0} g) wordt toegevoegd aan "${target.name}" en verdwijnt daarna.${warning}`,
-        'Samenvoegen',
+        t('wools.mergeTitle'),
+        t('wools.mergeConfirm', { name: v.name, weight: v.weightGrams ?? 0, target: target.name }) + warning,
+        t('wools.merge'),
       )
       .pipe(
         filter(Boolean),
@@ -478,7 +479,7 @@ export class WoolForm implements OnInit {
 
   protected remove(): void {
     this.confirm
-      .ask('Wol verwijderen', `Weet je zeker dat je "${this.form.controls.name.value}" wilt verwijderen?`)
+      .ask(t('wools.deleteTitle'), t('common.deleteConfirm', { name: this.form.controls.name.value }))
       .pipe(
         filter(Boolean),
         switchMap(() => this.api.wools.delete(+this.id()!)),

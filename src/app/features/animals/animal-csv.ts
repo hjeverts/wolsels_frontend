@@ -1,3 +1,4 @@
+import { TranslationKey, t } from '../../core/i18n/i18n';
 import { Animal, AnimalImportField, AnimalImportRow } from '../../core/models';
 import { toCsv, unescapeFormula } from '../../shared/csv';
 
@@ -5,22 +6,76 @@ export type AnimalCsvField = 'name' | AnimalImportField;
 
 export interface AnimalCsvFieldDef {
   key: AnimalCsvField;
-  /** Kolomkop bij exporteren. */
-  label: string;
-  /** Kolomkoppen die bij importeren automatisch aan dit veld gekoppeld worden (naast het label). */
+  /** Kolomkop bij exporteren, in de taal van de app. */
+  label: TranslationKey;
+  /**
+   * Kolomkoppen die bij importeren automatisch aan dit veld gekoppeld worden (naast het label). In alle talen,
+   * zodat een bestand uit een andere taal ook werkt.
+   */
   aliases: string[];
   maxLength?: number;
 }
 
 export const ANIMAL_CSV_FIELDS: readonly AnimalCsvFieldDef[] = [
-  { key: 'name', label: 'Naam', aliases: ['name', 'dier', 'roepnaam', 'diernaam'], maxLength: 200 },
-  { key: 'species', label: 'Diersoort', aliases: ['soort', 'species'], maxLength: 100 },
-  { key: 'breed', label: 'Ras', aliases: ['breed'], maxLength: 100 },
-  { key: 'color', label: 'Kleur', aliases: ['color', 'colour', 'vachtkleur'], maxLength: 100 },
-  { key: 'birthDate', label: 'Geboortedatum', aliases: ['geboren', 'geb datum', 'birthdate', 'birth date', 'date of birth'] },
-  { key: 'location', label: 'Locatie', aliases: ['location', 'stal', 'hok', 'weide'], maxLength: 200 },
-  { key: 'active', label: 'Actief', aliases: ['active', 'in bezit'] },
-  { key: 'notes', label: 'Notities', aliases: ['notitie', 'opmerkingen', 'opmerking', 'notes', 'note'], maxLength: 4000 },
+  {
+    key: 'name',
+    label: 'csv.name',
+    aliases: [
+      'naam', 'dier', 'roepnaam', 'diernaam', 'name', 'animal', 'tier', 'nom', 'animal', 'nome', 'animale', 'namn', 'djur',
+      'navn', 'dyr', 'nombre', 'imie', 'nazwa', 'zwierze',
+    ],
+    maxLength: 200,
+  },
+  {
+    key: 'species',
+    label: 'csv.species',
+    aliases: ['diersoort', 'soort', 'species', 'tierart', 'art', 'espece', 'specie', 'djurart', 'dyreart', 'especie', 'gatunek'],
+    maxLength: 100,
+  },
+  {
+    key: 'breed',
+    label: 'csv.breed',
+    aliases: ['ras', 'breed', 'rasse', 'race', 'razza', 'rase', 'raza', 'raca', 'rasa'],
+    maxLength: 100,
+  },
+  {
+    key: 'color',
+    label: 'csv.color',
+    aliases: ['kleur', 'vachtkleur', 'color', 'colour', 'farbe', 'couleur', 'colore', 'farg', 'farge', 'farve', 'cor', 'kolor'],
+    maxLength: 100,
+  },
+  {
+    key: 'birthDate',
+    label: 'csv.birthDate',
+    aliases: [
+      'geboortedatum', 'geboren', 'geb datum', 'birthdate', 'birth date', 'date of birth', 'geburtsdatum', 'geboren am',
+      'date de naissance', 'data di nascita', 'fodelsedatum', 'fodselsdato', 'fecha de nacimiento', 'data de nascimento',
+      'data urodzenia',
+    ],
+  },
+  {
+    key: 'location',
+    label: 'csv.location',
+    aliases: [
+      'locatie', 'stal', 'hok', 'weide', 'location', 'standort', 'ort', 'stall', 'emplacement', 'lieu', 'posizione', 'luogo',
+      'plats', 'sted', 'placering', 'ubicacion', 'localizacao', 'local', 'lokalizacja', 'miejsce',
+    ],
+    maxLength: 200,
+  },
+  {
+    key: 'active',
+    label: 'csv.active',
+    aliases: ['actief', 'in bezit', 'active', 'aktiv', 'actif', 'attivo', 'activo', 'ativo', 'aktywny'],
+  },
+  {
+    key: 'notes',
+    label: 'csv.notes',
+    aliases: [
+      'notities', 'notitie', 'opmerkingen', 'opmerking', 'notes', 'note', 'notizen', 'bemerkungen', 'remarques', 'anteckningar',
+      'notater', 'noter', 'notas', 'notatki', 'uwagi',
+    ],
+    maxLength: 4000,
+  },
 ];
 
 /** Per veld de index van de CSV-kolom, of null als het veld niet geïmporteerd wordt. */
@@ -29,7 +84,7 @@ export type ColumnMapping = Record<AnimalCsvField, number | null>;
 /** Leeg sjabloon, of alle dieren; de kolommen zijn gelijk aan wat de import automatisch herkent. */
 export function animalsToCsv(animals: readonly Animal[] = []): string {
   return toCsv([
-    ANIMAL_CSV_FIELDS.map((f) => f.label),
+    ANIMAL_CSV_FIELDS.map((f) => t(f.label)),
     ...animals.map((a) => [
       a.name,
       a.species,
@@ -37,7 +92,7 @@ export function animalsToCsv(animals: readonly Animal[] = []): string {
       a.color,
       a.birthDate,
       a.locationName,
-      a.active ? 'ja' : 'nee',
+      t(a.active ? 'csv.yes' : 'csv.no'),
       a.notes,
     ]),
   ]);
@@ -58,7 +113,7 @@ export function autoMap(headers: readonly string[]): ColumnMapping {
   const used = new Set<number>();
   const mapping = {} as ColumnMapping;
   for (const field of ANIMAL_CSV_FIELDS) {
-    const names = [field.label, ...field.aliases].map(normalize);
+    const names = [t(field.label), ...field.aliases].map(normalize);
     const index = normalized.findIndex((h, i) => !used.has(i) && names.includes(h));
     mapping[field.key] = index >= 0 ? index : null;
     if (index >= 0) used.add(index);
@@ -66,7 +121,7 @@ export function autoMap(headers: readonly string[]): ColumnMapping {
   return mapping;
 }
 
-/** yyyy-mm-dd, of d-m-yyyy / d/m/yyyy / d.m.yyyy (zoals Nederlandse Excel datums opslaat). */
+/** yyyy-mm-dd, of d-m-yyyy / d/m/yyyy / d.m.yyyy (zoals Excel in Europa datums opslaat). */
 export function parseDate(value: string): string | null | undefined {
   if (!value) return null;
   const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
@@ -79,8 +134,16 @@ export function parseDate(value: string): string | null | undefined {
   return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
 }
 
-const TRUE = ['ja', 'j', 'yes', 'y', 'true', 'waar', '1', 'x', 'actief'];
-const FALSE = ['nee', 'n', 'no', 'false', 'onwaar', '0', 'inactief'];
+/** Ja en nee in alle talen van de app (een export uit een andere taal moet ook te importeren zijn). */
+const TRUE = [
+  'ja', 'j', 'yes', 'y', 'true', 'waar', '1', 'x', 'actief', 'wahr', 'aktiv', 'oui', 'vrai', 'actif', 'si', 'sì', 'sí', 'vero',
+  'attivo', 'sant', 'sann', 'sand', 'verdadero', 'activo', 'sim', 'verdadeiro', 'ativo', 'tak', 'prawda', 'aktywny', 'active',
+];
+const FALSE = [
+  'nee', 'n', 'no', 'false', 'onwaar', '0', 'inactief', 'nein', 'falsch', 'inaktiv', 'non', 'faux', 'inactif', 'falso',
+  'inattivo', 'nej', 'falskt', 'nei', 'usann', 'falsk', 'inactivo', 'não', 'nao', 'inativo', 'nie', 'fałsz', 'nieaktywny',
+  'inactive',
+];
 
 /** ja/nee, true/false, 1/0 e.d.; leeg wordt null, iets onbekends undefined. */
 export function parseBoolean(value: string): boolean | null | undefined {
@@ -108,17 +171,17 @@ export function buildImportRows(table: readonly string[][], mapping: ColumnMappi
       const index = mapping[key];
       const value = index === null ? '' : unescapeFormula((cells[index] ?? '').trim());
       const max = ANIMAL_CSV_FIELDS.find((f) => f.key === key)?.maxLength;
-      if (max && value.length > max) errors.push(`${label(key)} is langer dan ${max} tekens.`);
+      if (max && value.length > max) errors.push(t('csv.tooLong', { field: label(key), max }));
       return value;
     };
     const name = get('name');
-    if (!name) errors.push('Naam ontbreekt.');
+    if (!name) errors.push(t('csv.nameMissing'));
     const birthDateText = get('birthDate');
     const birthDate = parseDate(birthDateText);
-    if (birthDate === undefined) errors.push(`Geboortedatum "${birthDateText}" niet herkend (gebruik bv. 2024-03-31 of 31-3-2024).`);
+    if (birthDate === undefined) errors.push(t('csv.badDate', { value: birthDateText }));
     const activeText = get('active');
     const active = parseBoolean(activeText);
-    if (active === undefined) errors.push(`Actief "${activeText}" niet herkend (gebruik ja of nee).`);
+    if (active === undefined) errors.push(t('csv.badBoolean', { value: activeText }));
     result.push({
       line: i + 2,
       errors,
@@ -139,7 +202,7 @@ export function buildImportRows(table: readonly string[][], mapping: ColumnMappi
 }
 
 function label(key: AnimalCsvField): string {
-  return ANIMAL_CSV_FIELDS.find((f) => f.key === key)!.label;
+  return t(ANIMAL_CSV_FIELDS.find((f) => f.key === key)!.label);
 }
 
 /** De gekoppelde velden, behalve naam: alleen die worden bij bestaande dieren bijgewerkt. */

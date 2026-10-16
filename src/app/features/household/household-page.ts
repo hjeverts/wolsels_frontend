@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { filter, switchMap } from 'rxjs';
 import { HouseholdService } from '../../core/household.service';
+import { TranslatePipe, t } from '../../core/i18n/i18n';
 import { Household, HouseholdMember } from '../../core/models';
 import { ConfirmService } from '../../shared/confirm.service';
 
@@ -26,6 +27,7 @@ import { ConfirmService } from '../../shared/confirm.service';
     MatInputModule,
     MatListModule,
     MatTooltipModule,
+    TranslatePipe,
   ],
   templateUrl: './household-page.html',
   styleUrl: './household-page.scss',
@@ -77,9 +79,9 @@ export class HouseholdPage implements OnInit {
     if (!url) return;
     try {
       await navigator.clipboard.writeText(url);
-      this.snackBar.open('Link gekopieerd.', undefined, { duration: 3000 });
+      this.snackBar.open(t('household.linkCopied'), undefined, { duration: 3000 });
     } catch {
-      this.snackBar.open('Kopiëren lukte niet; selecteer de link en kopieer hem zelf.', 'Sluiten', { duration: 5000 });
+      this.snackBar.open(t('common.copyFailed'), t('common.close'), { duration: 5000 });
     }
   }
 
@@ -87,7 +89,7 @@ export class HouseholdPage implements OnInit {
     const url = this.newInvite()?.url;
     if (!url || !('share' in navigator)) return;
     try {
-      await navigator.share({ title: 'Uitnodiging voor Wolsels', text: `Doe mee met ${this.household()?.name}`, url });
+      await navigator.share({ title: t('household.shareTitle'), text: t('household.shareText', { name: this.household()?.name }), url });
     } catch {
       // Delen geannuleerd.
     }
@@ -105,8 +107,8 @@ export class HouseholdPage implements OnInit {
   protected remove(member: HouseholdMember): void {
     this.confirm
       .ask(
-        'Lid verwijderen',
-        `${member.email} heeft daarna geen toegang meer tot ${this.household()?.name}. De gegevens blijven in het huishouden.`,
+        t('household.removeMember'),
+        t('household.removeMemberConfirm', { email: member.email, name: this.household()?.name }),
       )
       .pipe(
         filter(Boolean),
@@ -118,9 +120,9 @@ export class HouseholdPage implements OnInit {
   protected leave(): void {
     this.confirm
       .ask(
-        'Huishouden verlaten',
-        `Je hebt daarna geen toegang meer tot ${this.household()?.name}. De gegevens blijven voor de andere leden bewaard.`,
-        'Verlaten',
+        t('household.leave'),
+        t('household.leaveConfirm', { name: this.household()?.name }),
+        t('household.leaveButton'),
       )
       .pipe(
         filter(Boolean),

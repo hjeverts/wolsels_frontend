@@ -1,3 +1,5 @@
+import { t } from './i18n/i18n';
+
 /**
  * Rekent een mengverhouding om naar gewichten. Identiek aan de backend (BlendCalculator.cs),
  * zodat de gewichten direct tijdens het typen bijgewerkt kunnen worden. Bij opslaan rekent de
@@ -22,11 +24,11 @@ const round1 = (value: number) => Math.round((value + Number.EPSILON) * 10) / 10
 
 export function calculateBlend(input: CalculationInput, maxComponents: number): CalculationResult {
   const { ratios } = input;
-  if (ratios.length === 0) return fail('Een mengsel heeft minimaal één soort wol nodig.');
+  if (ratios.length === 0) return fail(t('calc.noComponents'));
   if (ratios.length > maxComponents)
-    return fail(`Een mengsel mag maximaal ${maxComponents} soorten wol bevatten.`);
+    return fail(t('calc.tooManyComponents', { max: maxComponents }));
   if (ratios.some((r) => !Number.isFinite(r) || r <= 0))
-    return fail('Elke verhouding moet groter dan 0 zijn.');
+    return fail(t('calc.ratioPositive'));
 
   const ratioSum = ratios.reduce((a, b) => a + b, 0);
   const percentages = ratios.map((r) => round1((r / ratioSum) * 100));
@@ -34,7 +36,7 @@ export function calculateBlend(input: CalculationInput, maxComponents: number): 
   if (input.basis === 'TotalWeight') {
     const total = input.totalWeightGrams;
     if (total === null || !Number.isFinite(total) || total <= 0)
-      return fail('Vul een totaalgewicht groter dan 0 in.');
+      return fail(t('calc.totalPositive'));
 
     // Grootste-restmethode in tienden van een gram: de som klopt altijd exact.
     const totalTenths = Math.round(total * TENTHS_PER_GRAM);
@@ -57,9 +59,9 @@ export function calculateBlend(input: CalculationInput, maxComponents: number): 
   }
 
   const index = input.basisComponentIndex;
-  if (index < 0 || index >= ratios.length) return fail('Kies de soort wol waarvan het gewicht bekend is.');
+  if (index < 0 || index >= ratios.length) return fail(t('calc.chooseBasis'));
   const known = input.basisComponentWeightGrams;
-  if (known === null || !Number.isFinite(known) || known <= 0) return fail('Vul een gewicht groter dan 0 in.');
+  if (known === null || !Number.isFinite(known) || known <= 0) return fail(t('calc.weightPositive'));
 
   const knownRounded = round1(known);
   const weights = ratios.map((r, i) => (i === index ? knownRounded : round1((knownRounded * r) / ratios[index])));

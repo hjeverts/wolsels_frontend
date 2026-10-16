@@ -50,6 +50,19 @@ Het actieve huishouden staat in `localStorage` en wordt met elk API-verzoek meeg
 `X-Household` (`core/household.interceptor.ts`); de backend controleert het lidmaatschap. Wisselen
 herlaadt de app, zodat er nooit gegevens van een ander huishouden in beeld blijven.
 
+### Talen
+
+De app is beschikbaar in het Nederlands, Duits, Engels, Frans, Italiaans, Zweeds, Noors, Deens, Spaans,
+Portugees en Pools. De taal staat in het gebruikersprofiel (Account → Taal) en geldt op elk apparaat; vóór het
+inloggen wordt de taal van de browser gebruikt (anders Engels). Bij een andere taal laadt de app opnieuw, zodat
+ook datums en getallen kloppen.
+
+Teksten staan in `src/app/core/i18n/translations/`. `nl.ts` is de bron: voeg een nieuwe tekst daar toe en
+daarna in elke andere taal; TypeScript geeft een fout als een taal een sleutel mist. In templates:
+`{{ 'wools.add' | t }}`, met parameters `{{ 'reset.for' | t: { email } }}`; in code `t('wools.add')`.
+Meervoudsvormen volgen `Intl.PluralRules` (`{ one, other }`, in het Pools ook `few` en `many`). De API krijgt de
+taal mee via `Accept-Language`.
+
 ### Iconen
 
 Favicon, app-iconen (192/512, maskable) en het Apple touch icon komen uit `icons-src/` (het "gesture"-

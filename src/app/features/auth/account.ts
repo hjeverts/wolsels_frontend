@@ -5,10 +5,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { toDataURL } from 'qrcode';
 import { filter, switchMap } from 'rxjs';
 import { AuthError, AuthService } from '../../core/auth.service';
+import { TranslatePipe, currentLanguage, switchLanguage, t } from '../../core/i18n/i18n';
+import { LANGUAGES, Language } from '../../core/i18n/languages';
 import { ConfirmService } from '../../shared/confirm.service';
 import { MIN_PASSWORD_LENGTH, passwordsMatch } from './register';
 
@@ -16,7 +19,16 @@ type Setup = { sharedKey: string; qr: string };
 
 @Component({
   selector: 'app-account',
-  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatIconModule, MatInputModule],
+  imports: [
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatInputModule,
+    MatSelectModule,
+    TranslatePipe,
+  ],
   templateUrl: './account.html',
   styleUrl: './account.scss',
 })
@@ -30,6 +42,8 @@ export class Account implements OnInit {
   readonly welkom = input<string>();
 
   protected readonly minLength = MIN_PASSWORD_LENGTH;
+  protected readonly languages = LANGUAGES;
+  protected readonly language = currentLanguage();
   protected readonly setup = signal<Setup | null>(null);
   protected readonly recoveryCodes = signal<string[] | null>(null);
   protected readonly twoFactorError = signal<string | null>(null);
@@ -95,7 +109,7 @@ export class Account implements OnInit {
 
   protected newRecoveryCodes(): void {
     this.confirm
-      .ask('Nieuwe herstelcodes', 'Je oude herstelcodes werken daarna niet meer.', 'Nieuwe codes maken')
+      .ask(t('account.newCodes'), t('account.newCodesConfirm'), t('account.newCodesButton'))
       .pipe(
         filter(Boolean),
         switchMap(() => this.auth.twoFactor({ resetRecoveryCodes: true })),
@@ -109,9 +123,9 @@ export class Account implements OnInit {
   protected disable(): void {
     this.confirm
       .ask(
-        'Tweestapsverificatie uitschakelen',
-        'Je account is daarna alleen nog met je wachtwoord beveiligd. Je authenticator-app moet je opnieuw koppelen als je 2FA later weer aanzet.',
-        'Uitschakelen',
+        t('account.disableTitle'),
+        t('account.disableConfirm'),
+        t('account.disable'),
       )
       .pipe(
         filter(Boolean),
@@ -120,7 +134,7 @@ export class Account implements OnInit {
       .subscribe({
         next: () => {
           this.recoveryCodes.set(null);
-          this.snackBar.open('Tweestapsverificatie is uitgeschakeld.', 'Sluiten', { duration: 5000 });
+          this.snackBar.open(t('account.disabled'), t('common.close'), { duration: 5000 });
         },
         error: (e: unknown) => this.twoFactorError.set(message(e)),
       });
@@ -129,13 +143,22 @@ export class Account implements OnInit {
   protected downloadRecoveryCodes(): void {
     const codes = this.recoveryCodes();
     if (!codes) return;
-    const text = `Herstelcodes Wolsels (${this.auth.user()?.email})\nElke code werkt één keer.\n\n${codes.join('\n')}\n`;
+    const text = `${t('account.codesFileHeader', { email: this.auth.user()?.email })}\n${t('account.codesFileNote')}\n\n${codes.join('\n')}\n`;
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'wolsels-herstelcodes.txt';
+    a.download = `${t('account.codesFileName')}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  /** Slaat de taal op in het profiel en laadt de app opnieuw in die taal. */
+  protected changeLanguage(language: Language): void {
+    this.busy.set(true);
+    this.auth.saveLanguage(language).subscribe({
+      next: () => switchLanguage(language),
+      error: () => this.busy.set(false),
+    });
   }
 
   protected changePassword(): void {
@@ -148,7 +171,7 @@ export class Account implements OnInit {
     this.auth.changePassword(oldPassword, password).subscribe({
       next: () => {
         this.passwordForm.reset();
-        this.snackBar.open('Je wachtwoord is gewijzigd.', 'Sluiten', { duration: 5000 });
+        this.snackBar.open(t('account.passwordChanged'), t('common.close'), { duration: 5000 });
       },
       error: (e: unknown) => this.passwordError.set(message(e)),
     });
@@ -160,5 +183,5 @@ function formatKey(key: string): string {
 }
 
 function message(e: unknown): string {
-  return e instanceof AuthError ? e.message : 'Er ging iets mis.';
+  return e instanceof AuthError ? e.message : t('errors.somethingWentWrong');
 }

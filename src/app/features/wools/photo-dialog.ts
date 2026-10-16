@@ -2,16 +2,17 @@ import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { TranslatePipe } from '../../core/i18n/i18n';
 
 /** Toont een foto op groot formaat. */
 @Component({
-  imports: [MatDialogModule, MatButtonModule, MatIconModule],
+  imports: [MatDialogModule, MatButtonModule, MatIconModule, TranslatePipe],
   template: `
     <mat-dialog-content>
       <img [src]="data.src" [alt]="data.alt" />
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Sluiten</button>
+      <button mat-button mat-dialog-close>{{ 'common.close' | t }}</button>
     </mat-dialog-actions>
   `,
   styles: `

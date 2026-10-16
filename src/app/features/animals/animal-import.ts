@@ -10,6 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
+import { TranslatePipe, TranslationKey, t } from '../../core/i18n/i18n';
 import { Animal, AnimalImportResult } from '../../core/models';
 import { CsvError, downloadCsv, parseCsv, readTextFile } from '../../shared/csv';
 import {
@@ -29,11 +30,11 @@ const PREVIEW_ROWS = 20;
 
 type Status = 'new' | 'update' | 'skip' | 'error';
 
-const STATUS_LABELS: Record<Status, string> = {
-  new: 'nieuw',
-  update: 'bijgewerkt',
-  skip: 'overgeslagen',
-  error: 'fout',
+const STATUS_LABELS: Record<Status, TranslationKey> = {
+  new: 'import.statusNew',
+  update: 'import.statusUpdate',
+  skip: 'import.statusSkip',
+  error: 'import.statusError',
 };
 
 interface PreviewRow extends ImportRow {
@@ -51,25 +52,25 @@ interface PreviewRow extends ImportRow {
     MatSelectModule,
     MatSlideToggleModule,
     MatTableModule,
+    TranslatePipe,
   ],
   template: `
     <div class="page-header">
-      <h1>Dieren importeren</h1>
+      <h1>{{ 'title.importAnimals' | t }}</h1>
     </div>
 
     <p>
-      Kies een CSV-bestand, bv. uit Excel ("Opslaan als" → CSV) of een
-      <a href="" (click)="$event.preventDefault(); downloadTemplate()">leeg sjabloon</a>. De eerste regel moet
-      de kolomkoppen bevatten. Dieren worden op naam gekoppeld aan je bestaande dieren.
+      {{ 'import.intro' | t }}
+      <a href="" (click)="$event.preventDefault(); downloadTemplate()">{{ 'import.downloadTemplate' | t }}</a>
     </p>
 
     <input #file type="file" accept=".csv,text/csv,text/plain" hidden (change)="choose(file)" />
     <div class="form-actions start">
       <button mat-stroked-button type="button" (click)="file.click()">
-        <mat-icon>upload_file</mat-icon> {{ fileName() ? 'Ander bestand kiezen' : 'CSV-bestand kiezen' }}
+        <mat-icon>upload_file</mat-icon> {{ (fileName() ? 'import.chooseOther' : 'import.chooseFile') | t }}
       </button>
       @if (fileName()) {
-        <span class="muted">{{ fileName() }} · {{ rows().length }} {{ rows().length === 1 ? 'dier' : 'dieren' }}</span>
+        <span class="muted">{{ fileName() }} · {{ 'import.animalCount' | t: { count: rows().length } }}</span>
       }
     </div>
     @if (fileError()) {
@@ -77,63 +78,63 @@ interface PreviewRow extends ImportRow {
     }
 
     @if (headers().length) {
-      <h2 class="section-title">Kolommen koppelen</h2>
-      <p class="muted">Herkende kolommen zijn al gekoppeld. Velden die je niet koppelt, worden bij bestaande dieren niet gewijzigd.</p>
+      <h2 class="section-title">{{ 'import.mapColumns' | t }}</h2>
+      <p class="muted">{{ 'import.mapIntro' | t }}</p>
       <div class="form-grid">
         @for (field of fields; track field.key) {
           <mat-form-field>
-            <mat-label>{{ field.label }}</mat-label>
+            <mat-label>{{ field.label | t }}</mat-label>
             <mat-select [value]="mapping()[field.key]" (selectionChange)="map(field.key, $event.value)" [required]="field.key === 'name'">
-              <mat-option [value]="null">– niet importeren</mat-option>
+              <mat-option [value]="null">– {{ 'import.skipColumn' | t }}</mat-option>
               @for (h of headers(); track $index) {
                 <mat-option [value]="$index">{{ h }}</mat-option>
               }
             </mat-select>
             @if (mapping()[field.key] !== null && samples()[mapping()[field.key]!]; as sample) {
-              <mat-hint>bv. {{ sample }}</mat-hint>
+              <mat-hint>{{ 'import.example' | t: { value: sample } }}</mat-hint>
             }
             @if (field.key === 'name' && mapping().name === null) {
-              <mat-hint class="error">Koppel een kolom aan de naam.</mat-hint>
+              <mat-hint class="error">{{ 'import.mapName' | t }}</mat-hint>
             }
           </mat-form-field>
         }
         <mat-form-field>
-          <mat-label>Diersoort voor nieuwe dieren</mat-label>
+          <mat-label>{{ 'import.defaultSpecies' | t }}</mat-label>
           <input matInput [value]="defaultSpecies()" (input)="defaultSpecies.set($any($event.target).value)" maxlength="100" />
-          <mat-hint>Als de diersoort in het bestand leeg is</mat-hint>
+          <mat-hint>{{ 'import.defaultSpeciesHint' | t }}</mat-hint>
         </mat-form-field>
       </div>
 
       <mat-slide-toggle [checked]="updateExisting()" (change)="updateExisting.set($event.checked)" class="toggle">
-        Bestaande dieren met dezelfde naam bijwerken
+        {{ 'import.updateExisting' | t }}
       </mat-slide-toggle>
       <p class="muted toggle-hint">
-        {{ updateExisting() ? 'De gekoppelde velden van bestaande dieren worden overschreven; lege cellen maken een veld leeg.' : 'Dieren die al bestaan, worden overgeslagen.' }}
+        {{ (updateExisting() ? 'import.updateExistingOn' : 'import.updateExistingOff') | t }}
       </p>
 
-      <h2 class="section-title">Controleren</h2>
+      <h2 class="section-title">{{ 'import.review' | t }}</h2>
       @if (animalsLoaded()) {
         <div class="stat-row">
           <div class="stat">
-            <div class="label">Nieuw</div>
+            <div class="label">{{ 'import.new' | t }}</div>
             <div class="value">{{ counts().new }}</div>
           </div>
           <div class="stat">
-            <div class="label">Bijwerken</div>
+            <div class="label">{{ 'import.update' | t }}</div>
             <div class="value">{{ counts().update }}</div>
           </div>
           <div class="stat">
-            <div class="label">Overslaan</div>
+            <div class="label">{{ 'import.skip' | t }}</div>
             <div class="value">{{ counts().skip }}</div>
           </div>
           <div class="stat">
-            <div class="label">Met fouten</div>
+            <div class="label">{{ 'import.withErrors' | t }}</div>
             <div class="value" [class.error]="counts().error">{{ counts().error }}</div>
           </div>
         </div>
 
         @if (tooMany()) {
-          <p class="error">Het bestand bevat meer dan {{ maxRows }} dieren. Splits het op in kleinere bestanden.</p>
+          <p class="error">{{ 'import.tooMany' | t: { max: maxRows } }}</p>
         }
         @if (errors().length) {
           <ul class="errors">
@@ -141,7 +142,7 @@ interface PreviewRow extends ImportRow {
               <li>{{ e }}</li>
             }
             @if (errors().length > 20) {
-              <li>… en nog {{ errors().length - 20 }} fouten</li>
+              <li>{{ 'import.moreErrors' | t: { count: errors().length - 20 } }}</li>
             }
           </ul>
         }
@@ -150,23 +151,23 @@ interface PreviewRow extends ImportRow {
           <div class="table-wrap">
             <table mat-table [dataSource]="preview()">
               <ng-container matColumnDef="line">
-                <th mat-header-cell *matHeaderCellDef class="num">Regel</th>
+                <th mat-header-cell *matHeaderCellDef class="num">{{ 'import.line' | t }}</th>
                 <td mat-cell *matCellDef="let r" class="num muted">{{ r.line }}</td>
               </ng-container>
               <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Naam</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'common.name' | t }}</th>
                 <td mat-cell *matCellDef="let r">{{ r.row.name }}</td>
               </ng-container>
               <ng-container matColumnDef="species">
-                <th mat-header-cell *matHeaderCellDef>Soort / ras</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'animals.speciesBreed' | t }}</th>
                 <td mat-cell *matCellDef="let r">{{ r.row.species || defaultSpecies() }}{{ r.row.breed ? ' · ' + r.row.breed : '' }}</td>
               </ng-container>
               <ng-container matColumnDef="location">
-                <th mat-header-cell *matHeaderCellDef>Locatie</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'harvest.location' | t }}</th>
                 <td mat-cell *matCellDef="let r" class="muted">{{ r.row.location }}</td>
               </ng-container>
               <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Wordt</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'import.result' | t }}</th>
                 <td mat-cell *matCellDef="let r" [class.error]="r.status === 'error'" [class.muted]="r.status === 'skip'">
                   {{ statusLabel(r) }}
                 </td>
@@ -176,23 +177,23 @@ interface PreviewRow extends ImportRow {
             </table>
           </div>
           @if (rows().length > preview().length) {
-            <p class="muted">De eerste {{ preview().length }} van {{ rows().length }} regels.</p>
+            <p class="muted">{{ 'import.previewNote' | t: { shown: preview().length, total: rows().length } }}</p>
           }
         }
       } @else if (!animalsFailed()) {
-        <p class="muted">Bestaande dieren laden…</p>
+        <p class="muted">{{ 'import.loadingAnimals' | t }}</p>
       }
     }
 
     <div class="form-actions">
       @if (animalsFailed()) {
-        <span class="error">Je dieren konden niet geladen worden.</span>
-        <button mat-button type="button" (click)="loadAnimals()">Opnieuw proberen</button>
+        <span class="error">{{ 'import.loadFailed' | t }}</span>
+        <button mat-button type="button" (click)="loadAnimals()">{{ 'common.retry' | t }}</button>
       }
       <span class="spacer"></span>
-      <a mat-button routerLink="/dieren">Annuleren</a>
+      <a mat-button routerLink="/dieren">{{ 'common.cancel' | t }}</a>
       <button mat-flat-button type="button" [disabled]="!canImport() || saving()" (click)="import()">
-        {{ toImport() === 1 ? '1 dier importeren' : toImport() + ' dieren importeren' }}
+        {{ 'import.submit' | t: { count: toImport() } }}
       </button>
     </div>
   `,
@@ -239,12 +240,12 @@ export class AnimalImport {
   protected readonly fileName = signal<string | null>(null);
   protected readonly fileError = signal<string | null>(null);
   protected readonly mapping = signal<ColumnMapping>(autoMap([]));
-  protected readonly defaultSpecies = signal('Konijn');
+  protected readonly defaultSpecies = signal(t('animals.rabbit'));
   protected readonly updateExisting = signal(false);
   protected readonly saving = signal(false);
   private readonly serverErrors = signal<string[]>([]);
 
-  protected readonly headers = computed(() => (this.table()[0] ?? []).map((h, i) => h.trim() || `Kolom ${i + 1}`));
+  protected readonly headers = computed(() => (this.table()[0] ?? []).map((h, i) => h.trim() || t('import.column', { n: i + 1 })));
   /** Eerste niet-lege waarde per kolom, als voorbeeld bij het koppelen. */
   protected readonly samples = computed(() =>
     this.headers().map((_, i) => this.table().slice(1).find((r) => r[i]?.trim())?.[i].trim() ?? ''),
@@ -262,9 +263,9 @@ export class AnimalImport {
       const errors = [...r.errors];
       const matches = existing.get(key(r.row.name)) ?? 0;
       let status: Status = matches ? (this.updateExisting() ? 'update' : 'skip') : 'new';
-      if (status === 'update' && matches > 1) errors.push(`Er zijn meerdere dieren met de naam "${r.row.name}".`);
-      if (status === 'update' && (inFile.get(key(r.row.name)) ?? 0) > 1) errors.push(`"${r.row.name}" staat meerdere keren in het bestand.`);
-      if (status === 'new' && !r.row.species && !this.defaultSpecies().trim()) errors.push('Diersoort ontbreekt.');
+      if (status === 'update' && matches > 1) errors.push(t('import.duplicateExisting', { name: r.row.name }));
+      if (status === 'update' && (inFile.get(key(r.row.name)) ?? 0) > 1) errors.push(t('import.duplicateInFile', { name: r.row.name }));
+      if (status === 'new' && !r.row.species && !this.defaultSpecies().trim()) errors.push(t('import.speciesMissing'));
       if (status === 'skip') errors.length = 0;
       if (errors.length) status = 'error';
       return { ...r, errors, status };
@@ -280,7 +281,7 @@ export class AnimalImport {
   protected readonly errors = computed(() => [
     ...this.serverErrors(),
     // Zonder naamkolom heeft elke regel die fout; dat staat al bij het veld Naam.
-    ...(this.mapping().name === null ? [] : this.rows().flatMap((r) => r.errors.map((e) => `Regel ${r.line}: ${e}`))),
+    ...(this.mapping().name === null ? [] : this.rows().flatMap((r) => r.errors.map((e) => t('import.lineError', { line: r.line, error: e })))),
   ]);
   protected readonly animalsLoaded = computed(() => this.animals() !== null);
   protected readonly tooMany = computed(() => this.rows().length > MAX_ROWS);
@@ -317,7 +318,7 @@ export class AnimalImport {
     this.fileError.set(null);
     this.serverErrors.set([]);
     if (file.size > MAX_FILE_BYTES) {
-      this.fileError.set('Dit bestand is te groot (maximaal 5 MB).');
+      this.fileError.set(t('import.fileTooLarge', { max: 5 }));
       return;
     }
     let table: string[][];
@@ -325,11 +326,11 @@ export class AnimalImport {
       table = parseCsv(await readTextFile(file));
     } catch (e) {
       if (!(e instanceof CsvError)) throw e;
-      this.fileError.set(`Dit bestand kan niet gelezen worden. ${e.message}`);
+      this.fileError.set(`${t('import.unreadable')} ${e.message}`);
       return;
     }
     if (table.length < 2) {
-      this.fileError.set('Dit bestand bevat geen gegevens onder de kolomkoppen.');
+      this.fileError.set(t('import.noData'));
       return;
     }
     this.fileName.set(file.name);
@@ -343,11 +344,11 @@ export class AnimalImport {
   }
 
   protected statusLabel(row: PreviewRow): string {
-    return STATUS_LABELS[row.status];
+    return t(STATUS_LABELS[row.status]);
   }
 
   protected downloadTemplate(): void {
-    downloadCsv('wolsels-dieren-sjabloon.csv', animalsToCsv());
+    downloadCsv(`${t('animals.templateFileName')}.csv`, animalsToCsv());
   }
 
   protected import(): void {
@@ -363,7 +364,7 @@ export class AnimalImport {
       })
       .subscribe({
         next: (result) => {
-          this.snackBar.open(describe(result, this.counts().skip), 'Sluiten', { duration: 8000 });
+          this.snackBar.open(describe(result, this.counts().skip), t('common.close'), { duration: 8000 });
           this.router.navigate(['/dieren']);
         },
         error: (error: HttpErrorResponse) => {
@@ -380,9 +381,9 @@ function key(name: string): string {
 }
 
 function describe(result: AnimalImportResult, skipped: number): string {
-  const parts = [`${result.created} ${result.created === 1 ? 'dier' : 'dieren'} toegevoegd`];
-  if (result.updated) parts.push(`${result.updated} bijgewerkt`);
-  if (result.skipped + skipped) parts.push(`${result.skipped + skipped} overgeslagen`);
-  if (result.locationsCreated.length) parts.push(`nieuwe locaties: ${result.locationsCreated.join(', ')}`);
+  const parts = [t('import.doneCreated', { count: result.created })];
+  if (result.updated) parts.push(t('import.doneUpdated', { count: result.updated }));
+  if (result.skipped + skipped) parts.push(t('import.doneSkipped', { count: result.skipped + skipped }));
+  if (result.locationsCreated.length) parts.push(t('import.doneLocations', { names: result.locationsCreated.join(', ') }));
   return parts.join(', ') + '.';
 }

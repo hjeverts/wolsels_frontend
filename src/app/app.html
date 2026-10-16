@@ -1,7 +1,7 @@
 <mat-toolbar class="toolbar">
   <a class="brand" routerLink="/"><mat-icon>gesture</mat-icon> Wolsels</a>
   @if (auth.user() && households.active(); as active) {
-    <button mat-button class="household" [matMenuTriggerFor]="householdMenu" aria-label="Huishouden kiezen">
+    <button mat-button class="household" [matMenuTriggerFor]="householdMenu" [attr.aria-label]="'app.chooseHousehold' | t">
       <mat-icon>home</mat-icon>
       <span class="household-name">{{ active.name }}</span>
       <mat-icon class="caret">arrow_drop_down</mat-icon>
@@ -12,42 +12,42 @@
           <mat-icon>{{ h.id === households.activeId() ? 'radio_button_checked' : 'radio_button_unchecked' }}</mat-icon>
           <span>{{ h.name }}</span>
           @if (h.memberCount > 1) {
-            <span class="members">· {{ h.memberCount }} leden</span>
+            <span class="members">· {{ 'app.memberCount' | t: { count: h.memberCount } }}</span>
           }
         </button>
       }
       <mat-divider />
       <a mat-menu-item routerLink="/huishouden">
         <mat-icon>group_add</mat-icon>
-        <span>Huishouden beheren en uitnodigen</span>
+        <span>{{ 'app.manageHousehold' | t }}</span>
       </a>
     </mat-menu>
   }
   <span class="spacer"></span>
   @if (auth.user(); as user) {
-    <button mat-button class="user" [matMenuTriggerFor]="userMenu" aria-label="Accountmenu">
+    <button mat-button class="user" [matMenuTriggerFor]="userMenu" [attr.aria-label]="'app.accountMenu' | t">
       <mat-icon>account_circle</mat-icon>
       <span class="user-email">{{ user.email }}</span>
     </button>
     <mat-menu #userMenu="matMenu" xPosition="before">
       <a mat-menu-item routerLink="/account">
         <mat-icon>manage_accounts</mat-icon>
-        <span>Account en 2FA</span>
+        <span>{{ 'app.account' | t }}</span>
       </a>
       <a mat-menu-item routerLink="/huishouden">
         <mat-icon>home</mat-icon>
-        <span>Huishouden</span>
+        <span>{{ 'app.household' | t }}</span>
       </a>
       @if (user.isAdmin) {
         <a mat-menu-item routerLink="/beheer">
           <mat-icon>admin_panel_settings</mat-icon>
-          <span>Gebruikersbeheer</span>
+          <span>{{ 'app.admin' | t }}</span>
         </a>
       }
       <mat-divider />
       <button mat-menu-item (click)="logout()">
         <mat-icon>logout</mat-icon>
-        <span>Uitloggen</span>
+        <span>{{ 'app.logout' | t }}</span>
       </button>
     </mat-menu>
   }
@@ -57,7 +57,7 @@
     @for (link of links; track link.path) {
       <a mat-tab-link [routerLink]="link.path" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive">
         <mat-icon class="nav-icon">{{ link.icon }}</mat-icon>
-        <span class="nav-label">{{ link.label }}</span>
+        <span class="nav-label">{{ link.label | t }}</span>
       </a>
     }
   </nav>

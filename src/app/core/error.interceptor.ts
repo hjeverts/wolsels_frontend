@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { HouseholdService } from './household.service';
+import { t } from './i18n/i18n';
 
 /**
  * Toont fouten van de API (ProblemDetails) als melding. Een verlopen sessie stuurt naar de inlogpagina.
@@ -21,16 +22,16 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 403 && (error.error as { type?: string } | null)?.type === 'household-access') {
         // Het bewaarde huishouden is niet (meer) van jou, bv. omdat je bent verwijderd.
         households.forget();
-        snackBar.open('Je hebt geen toegang (meer) tot dat huishouden.', 'Sluiten', { duration: 6000 });
+        snackBar.open(t('errors.noHouseholdAccess'), t('common.close'), { duration: 6000 });
         households.load().subscribe(() => router.navigate(['/voorraad']));
         return throwError(() => error);
       }
       if (error.status === 401) {
-        if (auth.user()) snackBar.open('Je sessie is verlopen. Log opnieuw in.', 'Sluiten', { duration: 6000 });
+        if (auth.user()) snackBar.open(t('errors.sessionExpired'), t('common.close'), { duration: 6000 });
         auth.user.set(null);
         router.navigate(['/inloggen'], { queryParams: { terug: router.url } });
       } else {
-        snackBar.open(describe(error), 'Sluiten', { duration: 8000 });
+        snackBar.open(describe(error), t('common.close'), { duration: 8000 });
       }
       return throwError(() => error);
     }),
@@ -38,11 +39,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 };
 
 function describe(error: HttpErrorResponse): string {
-  if (error.status === 0) return 'De server is niet bereikbaar.';
+  if (error.status === 0) return t('errors.serverUnreachable');
   // Door nginx geweigerd, dus zonder ProblemDetails.
-  if (error.status === 413) return 'Dit bestand is te groot om te uploaden.';
+  if (error.status === 413) return t('errors.fileTooLarge');
   const problem = error.error as { title?: string; errors?: Record<string, string[]> } | null;
   const details = problem?.errors ? Object.values(problem.errors).flat() : [];
   if (details.length) return details.join(' ');
-  return problem?.title ?? `Er ging iets mis (${error.status}).`;
+  return problem?.title ?? t('errors.somethingWentWrongStatus', { status: error.status });
 }
