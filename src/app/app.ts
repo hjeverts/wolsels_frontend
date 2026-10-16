@@ -5,7 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from './core/auth.service';
 import { HouseholdService } from './core/household.service';
 import { TranslatePipe, TranslationKey } from './core/i18n/i18n';
@@ -37,6 +38,8 @@ export class App {
     effect(() => {
       if (this.auth.user()) this.households.load().subscribe();
     });
+    // Apply the profile language between pages, never in the middle of a flow (see AuthService.syncLanguage).
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => this.auth.syncLanguage());
   }
 
   protected readonly links: { path: string; label: TranslationKey; icon: string }[] = [

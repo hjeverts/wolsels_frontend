@@ -98,8 +98,13 @@ export function animalsToCsv(animals: readonly Animal[] = []): string {
   ]);
 }
 
+/** Letters that NFD does not split into a base letter plus accent (e.g. Danish/Norwegian "Fødselsdato"). */
+const SPECIAL_LETTERS: Record<string, string> = { ø: 'o', æ: 'ae', å: 'a', ł: 'l', ß: 'ss', œ: 'oe' };
+
 function normalize(header: string): string {
   return header
+    .toLowerCase()
+    .replace(/[øæåłßœ]/g, (c) => SPECIAL_LETTERS[c])
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()

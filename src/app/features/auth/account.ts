@@ -43,7 +43,8 @@ export class Account implements OnInit {
 
   protected readonly minLength = MIN_PASSWORD_LENGTH;
   protected readonly languages = LANGUAGES;
-  protected readonly language = currentLanguage();
+  protected readonly language = signal<Language>(currentLanguage());
+  protected readonly languageError = signal<string | null>(null);
   protected readonly setup = signal<Setup | null>(null);
   protected readonly recoveryCodes = signal<string[] | null>(null);
   protected readonly twoFactorError = signal<string | null>(null);
@@ -154,10 +155,21 @@ export class Account implements OnInit {
 
   /** Slaat de taal op in het profiel en laadt de app opnieuw in die taal. */
   protected changeLanguage(language: Language): void {
+    const previous = this.language();
+    this.language.set(language);
+    this.languageError.set(null);
     this.busy.set(true);
     this.auth.saveLanguage(language).subscribe({
-      next: () => switchLanguage(language),
-      error: () => this.busy.set(false),
+      next: () => {
+        // Usually reloads; without working storage it doesn't, so the page must stay usable.
+        this.busy.set(false);
+        switchLanguage(language);
+      },
+      error: (e: unknown) => {
+        this.busy.set(false);
+        this.language.set(previous);
+        this.languageError.set(message(e));
+      },
     });
   }
 
