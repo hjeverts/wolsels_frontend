@@ -8,6 +8,7 @@ import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { Blend, BlendStatus } from '../../core/models';
+import { swatchColor } from '../../shared/color-names';
 import { ColorSwatch } from '../../shared/color-swatch';
 import { GramsPipe } from '../../shared/grams.pipe';
 
@@ -80,7 +81,7 @@ import { GramsPipe } from '../../shared/grams.pipe';
               <td mat-cell *matCellDef="let b">
                 <span class="inline">
                   @if (b.isDyed) {
-                    <app-color-swatch [color]="b.dyeColorHex" [label]="b.dyeColor" />
+                    <app-color-swatch [color]="dyeSwatch(b)" [label]="b.dyeColor" />
                   }
                   {{ yarn(b) }}
                 </span>
@@ -133,6 +134,7 @@ import { GramsPipe } from '../../shared/grams.pipe';
 })
 export class BlendList {
   private readonly api = inject(ApiService);
+  protected readonly dyeSwatch = (b: Blend) => swatchColor(b.dyeColorHex, b.dyeColor);
   private readonly router = inject(Router);
 
   protected readonly columns = ['name', 'ratio', 'input', 'output', 'yarn', 'date'];

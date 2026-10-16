@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, computed, inject, input, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog } from '@angular/material/dialog';
@@ -16,7 +16,8 @@ import { Router, RouterLink } from '@angular/router';
 import { EMPTY, Observable, catchError, concatMap, filter, from, map, of, switchMap, toArray } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { Harvest, Wool } from '../../core/models';
-import { guessColorHex, swatchColor } from '../../shared/color-names';
+import { AutoColor, ColorHint, ColorPick } from '../../shared/auto-color';
+import { swatchColor } from '../../shared/color-names';
 import { ColorSwatch } from '../../shared/color-swatch';
 import { GramsPipe } from '../../shared/grams.pipe';
 import { ConfirmService } from '../../shared/confirm.service';
@@ -47,6 +48,8 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
     MatProgressSpinnerModule,
     MatTableModule,
     DatePipe,
+    ColorHint,
+    ColorPick,
     ColorSwatch,
     GramsPipe,
   ],
@@ -75,20 +78,8 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
         <mat-form-field subscriptSizing="dynamic">
           <mat-label>Kleur</mat-label>
           <input matInput formControlName="color" placeholder="bv. Naturel, Bruin" required />
-          <span matSuffix class="color-pick">
-            <app-color-swatch [color]="form.controls.colorHex.value" />
-            <input type="color" aria-label="Kleurcode kiezen" [value]="form.controls.colorHex.value || '#ffffff'" (input)="pickColor($any($event.target).value)" />
-          </span>
-          <mat-hint>
-            @if (!colorAuto()) {
-              Zelf gekozen kleur ·
-              <button type="button" class="link" (click)="useAutoColor()">volg de kleurnaam</button>
-            } @else if (colorName().trim() && !colorGuess()) {
-              Niet herkend; kies via het bolletje
-            } @else {
-              Bolletje volgt de kleurnaam
-            }
-          </mat-hint>
+          <app-color-pick matSuffix [color]="autoColor" />
+          <mat-hint><app-color-hint [color]="autoColor" /></mat-hint>
         </mat-form-field>
 
         <mat-form-field>
@@ -214,15 +205,6 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
         min-width: 300px;
       }
     }
-    .link {
-      background: none;
-      border: 0;
-      padding: 0;
-      font: inherit;
-      color: var(--mat-sys-primary);
-      text-decoration: underline;
-      cursor: pointer;
-    }
     .photos {
       display: flex;
       flex-wrap: wrap;
@@ -270,17 +252,6 @@ const COMMON_WOOL_TYPES = ['Merino', 'Shetland', 'Alpaca', 'Angora', 'Mohair', '
       right: 4px;
       background: color-mix(in srgb, var(--mat-sys-surface) 85%, transparent);
     }
-    .color-pick {
-      position: relative;
-      display: inline-flex;
-      padding: 0 12px;
-      input[type='color'] {
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        cursor: pointer;
-      }
-    }
   `,
 })
 export class WoolForm implements OnInit {
@@ -316,15 +287,10 @@ export class WoolForm implements OnInit {
   private pendingKey = 0;
 
   /** Het bolletje volgt de kleurnaam, tot je zelf een kleur kiest. */
-  protected readonly colorAuto = signal(true);
-  protected readonly colorName = toSignal(this.form.controls.color.valueChanges, { initialValue: '' });
-  protected readonly colorGuess = computed(() => guessColorHex(this.colorName()));
+  protected readonly autoColor = new AutoColor(this.form.controls.color, this.form.controls.colorHex);
   protected readonly swatch = (w: Wool) => swatchColor(w.colorHex, w.color);
 
   constructor() {
-    this.form.controls.color.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((name) => this.colorAuto() && this.form.controls.colorHex.setValue(guessColorHex(name)));
     inject(DestroyRef).onDestroy(() => this.photos().forEach((p) => this.revoke(p)));
   }
 
@@ -343,8 +309,6 @@ export class WoolForm implements OnInit {
     if (!id) return;
     this.api.harvests.list({ woolId: +id }).subscribe((h) => this.harvests.set(h));
     this.api.wools.get(+id).subscribe((wool) => {
-      // Een eigen kleurcode blijft staan; zonder kleurcode (of als die gelijk is aan de gok) volgt het bolletje de naam.
-      this.colorAuto.set(!wool.colorHex || wool.colorHex === guessColorHex(wool.color));
       this.photos.set(wool.photoIds.map((photoId) => ({ kind: 'saved', id: photoId })));
       this.form.reset({
         name: wool.name,
@@ -355,17 +319,8 @@ export class WoolForm implements OnInit {
         origin: wool.origin ?? '',
         notes: wool.notes ?? '',
       });
+      this.autoColor.loaded();
     });
-  }
-
-  protected pickColor(hex: string): void {
-    this.colorAuto.set(false);
-    this.form.controls.colorHex.setValue(hex);
-  }
-
-  protected useAutoColor(): void {
-    this.colorAuto.set(true);
-    this.form.controls.colorHex.setValue(guessColorHex(this.form.controls.color.value));
   }
 
   protected trackPhoto(p: PhotoItem): string {
