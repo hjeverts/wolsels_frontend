@@ -76,6 +76,11 @@ const appRoutes: Routes = [
     loadComponent: () => import('./features/animals/animal-form').then((m) => m.AnimalForm),
   },
   {
+    path: 'dieren/importeren',
+    title: 'Dieren importeren · Wolsels',
+    loadComponent: () => import('./features/animals/animal-import').then((m) => m.AnimalImport),
+  },
+  {
     path: 'dieren/:id',
     title: 'Dier · Wolsels',
     loadComponent: () => import('./features/animals/animal-form').then((m) => m.AnimalForm),

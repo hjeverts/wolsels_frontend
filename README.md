@@ -25,6 +25,7 @@ npm run build
 | `/mengsels`   | Mengsels met verhouding, input/output, opbrengst %, garen- en verfgegevens |
 | `/productie`  | Oogsten ruwe wol, totalen per maand en per dier/locatie                   |
 | `/dieren`     | Dieren (bv. angorakonijnen) met locatie en totale opbrengst               |
+| `/dieren/importeren` | Dieren importeren uit CSV (kolommen koppelen, controleren, bestaande bijwerken of overslaan); export via de dierenlijst |
 | `/locaties`   | Locaties; oogsten kunnen ook direct op een locatie geboekt worden         |
 | `/account`    | Tweestapsverificatie (QR-code, herstelcodes) en wachtwoord wijzigen       |
 | `/huishouden` | Leden, uitnodigingslinks, naam, verlaten, extra huishouden aanmaken       |
