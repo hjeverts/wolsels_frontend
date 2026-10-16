@@ -315,7 +315,7 @@ export class BlendForm implements OnInit {
         spinDirection: v.spinDirection,
         isDyed: v.isDyed,
         dyeColor: emptyToNull(v.dyeColor),
-        dyeColorHex: v.isDyed ? v.dyeColorHex : null,
+        dyeColorHex: v.isDyed ? this.dyeColor.saveValue() : null,
         dyeProduct: emptyToNull(v.dyeProduct),
         dyeMethod: emptyToNull(v.dyeMethod),
       })

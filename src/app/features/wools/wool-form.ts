@@ -426,7 +426,7 @@ export class WoolForm implements OnInit {
         name: v.name,
         woolType: v.woolType,
         color: v.color,
-        colorHex: v.colorHex,
+        colorHex: this.autoColor.saveValue(),
         weightGrams: toNumber(v.weightGrams) ?? 0,
         origin: emptyToNull(v.origin),
         notes: emptyToNull(v.notes),

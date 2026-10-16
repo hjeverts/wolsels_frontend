@@ -7,6 +7,10 @@ import { ColorSwatch } from './color-swatch';
 /**
  * Laat een kleurcode de kleurnaam volgen ("Donkerbruin" → bruin bolletje), tot de gebruiker zelf een kleur
  * kiest. Aanmaken in een injection context (veldinitialisatie of constructor).
+ *
+ * Opgeslagen wordt alleen een zelf gekozen kleur ({@link saveValue}); "volgt de naam" wordt opgeslagen als
+ * geen kleurcode. Zo blijft een zelf gekozen kleur altijd staan, ook als die toevallig gelijk is aan de gok,
+ * en profiteren oude gegevens vanzelf van betere kleurnamen.
  */
 export class AutoColor {
   /** Volgt de kleurnaam; false zodra de gebruiker zelf een kleur kiest. */
@@ -28,13 +32,17 @@ export class AutoColor {
   }
 
   /**
-   * Na het laden van opgeslagen gegevens (na form.reset): een eigen kleurcode blijft staan; zonder kleurcode,
-   * of als die gelijk is aan de gok, volgt het bolletje weer de naam.
+   * Na het laden van opgeslagen gegevens (na form.reset): een opgeslagen kleurcode is zelf gekozen en blijft
+   * staan; zonder kleurcode volgt het bolletje de naam.
    */
   loaded(): void {
-    const hex = this.hexControl.value;
-    this.auto.set(!hex || hex === guessColorHex(this.name.value));
+    this.auto.set(!this.hexControl.value);
     if (this.auto()) this.hexControl.setValue(guessColorHex(this.name.value));
+  }
+
+  /** De kleurcode om op te slaan: null als het bolletje de naam volgt. */
+  saveValue(): string | null {
+    return this.auto() ? null : this.hexControl.value;
   }
 
   pick(hex: string): void {

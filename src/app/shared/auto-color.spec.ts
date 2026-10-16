@@ -43,17 +43,28 @@ describe('AutoColor', () => {
     expect(color.auto()).toBe(true);
   });
 
-  it('houdt na het laden een eigen kleurcode, en volgt de naam als de code gelijk is aan de gok', () => {
+  it('houdt na het laden een opgeslagen kleurcode, ook als die gelijk is aan de gok', () => {
     const own = setup('Blauw', '#abcdef');
     own.color.loaded();
     expect(own.color.auto()).toBe(false);
     own.nameControl.setValue('Geel');
     expect(own.hexControl.value).toBe('#abcdef');
 
-    const guessed = setup('Blauw', guessColorHex('Blauw'));
-    guessed.color.loaded();
-    expect(guessed.color.auto()).toBe(true);
-    guessed.nameControl.setValue('Geel');
-    expect(guessed.hexControl.value).toBe(guessColorHex('Geel'));
+    // Bv. "Wit" met zelf gekozen #ffffff: wordt de naam "Crème", dan blijft het wit.
+    const sameAsGuess = setup('Wit', guessColorHex('Wit'));
+    sameAsGuess.color.loaded();
+    expect(sameAsGuess.color.auto()).toBe(false);
+    sameAsGuess.nameControl.setValue('Crème');
+    expect(sameAsGuess.hexControl.value).toBe(guessColorHex('Wit'));
+  });
+
+  it('slaat alleen een zelf gekozen kleur op', () => {
+    const { nameControl, color } = setup();
+    nameControl.setValue('Rood');
+    expect(color.saveValue()).toBeNull();
+    color.pick(guessColorHex('Rood')!);
+    expect(color.saveValue()).toBe(guessColorHex('Rood'));
+    color.follow();
+    expect(color.saveValue()).toBeNull();
   });
 });
