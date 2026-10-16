@@ -1,5 +1,16 @@
 import { useTranslations } from '../../core/i18n/i18n';
+import { Translations } from '../../core/i18n/i18n';
+import { LANGUAGES, Language } from '../../core/i18n/languages';
+import da from '../../core/i18n/translations/da';
 import de from '../../core/i18n/translations/de';
+import en from '../../core/i18n/translations/en';
+import es from '../../core/i18n/translations/es';
+import fr from '../../core/i18n/translations/fr';
+import italian from '../../core/i18n/translations/it';
+import nb from '../../core/i18n/translations/nb';
+import pl from '../../core/i18n/translations/pl';
+import pt from '../../core/i18n/translations/pt';
+import sv from '../../core/i18n/translations/sv';
 import nl from '../../core/i18n/translations/nl';
 import { Animal } from '../../core/models';
 import { parseCsv } from '../../shared/csv';
@@ -130,4 +141,29 @@ describe('animal-csv in other languages', () => {
     expect(row.errors).toEqual([]);
     expect(row.row).toMatchObject({ name: 'Flocke', species: 'Kaninchen', location: 'Stall', active: false, birthDate: '2024-03-01' });
   });
+});
+
+describe('animal-csv across all languages', () => {
+  const all: Record<Language, Translations> = { nl, de, en, fr, it: italian, sv, nb, da, es, pt, pl };
+  afterEach(() => useTranslations('nl', nl));
+
+  for (const { code } of LANGUAGES) {
+    it(`reads back a ${code} export in every column`, () => {
+      const exported: Animal = {
+        id: 1, name: 'Flocke', species: 'X', breed: 'Y', color: 'Z', birthDate: '2024-03-01',
+        locationId: null, locationName: 'Stall', active: false, notes: 'N', totalHarvestedGrams: 0, lastHarvestDate: null,
+      };
+      useTranslations(code, all[code]);
+      const csv = animalsToCsv([exported]);
+
+      useTranslations('nl', nl);
+      const table = parseCsv(csv);
+      const mapping = autoMap(table[0]);
+      const unmapped = Object.entries(mapping).filter(([, column]) => column === null).map(([field]) => field);
+      expect({ code, unmapped }).toEqual({ code, unmapped: [] });
+      const [row] = buildImportRows(table, mapping);
+      expect({ code, errors: row.errors }).toEqual({ code, errors: [] });
+      expect(row.row).toMatchObject({ birthDate: '2024-03-01', active: false, location: 'Stall', notes: 'N' });
+    });
+  }
 });

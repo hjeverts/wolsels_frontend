@@ -37,23 +37,28 @@ export class AuthService {
   loadMe(): Observable<Me | null> {
     return this.http.get<Me>('/api/auth/me').pipe(
       catchError(() => of(null)),
-      tap((me) => {
-        this.user.set(me);
-        if (me) this.syncLanguage(me);
-      }),
+      tap((me) => this.user.set(me)),
     );
   }
 
   /** Saves the language in the profile. */
   saveLanguage(language: Language): Observable<void> {
-    return this.http.put<void>('/api/auth/language', { language });
+    return this.http.put<void>('/api/auth/language', { language }).pipe(
+      tap(() => this.user.update((me) => (me ? { ...me, language } : me))),
+      catchError((error: HttpErrorResponse) => throwError(() => new AuthError(problemMessage(error)))),
+    );
   }
 
   /**
-   * The profile language applies on every device: if it differs, the app is reloaded in that language. An
-   * account without a language (just created) gets the language the app is currently in.
+   * Applies the profile language, which holds on every device: if it differs, the app reloads in that
+   * language. An account without a language (just created) gets the language the app is in now.
+   *
+   * Only call this at a safe moment (after a completed navigation, see App): a reload in the middle of a
+   * flow would, for example, throw away freshly shown recovery codes or the page to return to after login.
    */
-  private syncLanguage(me: Me): void {
+  syncLanguage(): void {
+    const me = this.user();
+    if (!me) return;
     if (!isLanguage(me.language)) this.saveLanguage(currentLanguage()).subscribe({ error: () => undefined });
     else if (me.language !== currentLanguage()) switchLanguage(me.language);
   }
