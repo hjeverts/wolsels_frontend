@@ -6,6 +6,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRadioModule } from '@angular/material/radio';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -31,6 +32,7 @@ type Source = 'animal' | 'location';
     MatButtonModule,
     MatButtonToggleModule,
     MatRadioModule,
+    MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -85,7 +87,9 @@ type Source = 'animal' | 'location';
 
             <mat-form-field>
               <mat-label>{{ 'common.date' | t }}</mat-label>
-              <input matInput type="date" formControlName="date" required />
+              <input matInput [matDatepicker]="datePicker" formControlName="date" required />
+              <mat-datepicker-toggle matIconSuffix [for]="datePicker" />
+              <mat-datepicker #datePicker />
             </mat-form-field>
 
             <mat-form-field>

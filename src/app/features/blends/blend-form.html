@@ -125,7 +125,9 @@
       <div class="form-grid">
         <mat-form-field>
           <mat-label>{{ 'blends.spunOn' | t }}</mat-label>
-          <input matInput type="date" formControlName="spunOn" />
+          <input matInput [matDatepicker]="spunOnPicker" formControlName="spunOn" />
+          <mat-datepicker-toggle matIconSuffix [for]="spunOnPicker" />
+          <mat-datepicker #spunOnPicker />
         </mat-form-field>
 
         <mat-form-field>
