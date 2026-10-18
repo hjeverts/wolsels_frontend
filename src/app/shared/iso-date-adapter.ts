@@ -84,7 +84,7 @@ export class IsoDateAdapter extends DateAdapter<string> {
     const yearFirst = first.length > 2;
     const year = +(yearFirst ? first : last);
     const day = +(yearFirst ? last : first);
-    return this.fromParts(year < 100 ? 2000 + year : year, month, day);
+    return this.fromParts(year < 100 ? this.fullYear(year) : year, month, day);
   }
 
   format(date: string, displayFormat: object): string {
@@ -129,8 +129,17 @@ export class IsoDateAdapter extends DateAdapter<string> {
   private toDate(date: string): Date {
     const m = ISO_DATE.exec(date);
     if (!m) return this.native.invalid();
-    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    // setFullYear, because the Date constructor turns years 0-99 into 1900-1999.
+    const d = new Date(2000, 0, 1);
+    d.setFullYear(+m[1], +m[2] - 1, +m[3]);
     return d.getMonth() === +m[2] - 1 && d.getDate() === +m[3] ? d : this.native.invalid();
+  }
+
+  /** A two-digit year in the century that puts it at most 10 years ahead (95 → 1995, 26 → 2026). */
+  private fullYear(twoDigits: number): number {
+    const limit = new Date().getFullYear() + 10;
+    const year = Math.floor(limit / 100) * 100 + twoDigits;
+    return year > limit ? year - 100 : year;
   }
 
   private fromDate(date: Date): string {

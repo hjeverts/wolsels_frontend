@@ -27,6 +27,24 @@ describe('IsoDateAdapter', () => {
     expect(a.isValid(a.parse('morgen')!)).toBe(false);
   });
 
+  it('puts two-digit years at most 10 years ahead', () => {
+    vi.useFakeTimers({ now: new Date(2026, 9, 18), toFake: ['Date'] });
+    try {
+      const a = adapter();
+      expect(a.parse('18.10.36')).toBe('2036-10-18');
+      expect(a.parse('18.10.37')).toBe('1937-10-18');
+      expect(a.parse('18.10.95')).toBe('1995-10-18');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('handles years below 100 without shifting them to the 1900s', () => {
+    const a = adapter();
+    expect(a.getYear('0050-06-01')).toBe(50);
+    expect(a.addCalendarDays('0050-12-31', 1)).toBe('0051-01-01');
+  });
+
   it('formats in the locale', () => {
     expect(adapter('nl').format('2026-10-18', MAT_NATIVE_DATE_FORMATS.display.dateInput)).toBe('18-10-2026');
   });
