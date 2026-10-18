@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -36,6 +37,7 @@ const breeds = () => [
     DatePipe,
     MatAutocompleteModule,
     MatButtonModule,
+    MatDatepickerModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -84,7 +86,9 @@ const breeds = () => [
 
         <mat-form-field>
           <mat-label>{{ 'animals.birthDate' | t }}</mat-label>
-          <input matInput type="date" formControlName="birthDate" />
+          <input matInput [matDatepicker]="birthDatePicker" formControlName="birthDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="birthDatePicker" />
+          <mat-datepicker #birthDatePicker />
         </mat-form-field>
 
         <mat-form-field>
