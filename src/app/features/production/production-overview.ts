@@ -88,7 +88,7 @@ const monthName = (month: number, year?: number) =>
               <h2 class="section-title">{{ 'production.perSource' | t }}</h2>
               <div class="bars">
                 @for (src of sources(); track src.kind + src.id) {
-                  <div class="bar-row">
+                  <div class="bar-row stacked">
                     <span class="bar-label">
                       <mat-icon inline class="muted">{{ src.kind === 'animal' ? 'cruelty_free' : 'location_on' }}</mat-icon>
                       {{ src.name }}
@@ -186,6 +186,16 @@ const monthName = (month: number, year?: number) =>
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    /* Name on its own line above the bar: animal names include the breeder and must stay readable in full. */
+    .bar-row.stacked {
+      grid-template-columns: 1fr 72px;
+      row-gap: 2px;
+      .bar-label {
+        grid-column: 1 / -1;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
     }
     .bar-track {
       height: 12px;
