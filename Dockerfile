@@ -11,8 +11,12 @@ FROM nginxinc/nginx-unprivileged:1.30-alpine
 USER root
 RUN apk upgrade --no-cache && apk del --no-cache curl
 USER nginx
+# PUBLIC_URL: public address without a trailing slash, e.g. https://wolsels.nl (canonical link, sitemap).
+# SITE_INDEXABLE=true lets search engines index the landing page; off by default.
 ENV API_UPSTREAM=http://backend:8080 \
-    NGINX_RESOLVER=127.0.0.11
+    NGINX_RESOLVER=127.0.0.11 \
+    PUBLIC_URL= \
+    SITE_INDEXABLE=false
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist/wolsels-frontend/browser /usr/share/nginx/html
 EXPOSE 8080

@@ -1,4 +1,5 @@
-import { inject } from '@angular/core';
+import { PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CanActivateFn, Router } from '@angular/router';
 import { map, of } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -19,4 +20,16 @@ export const guestGuard: CanActivateFn = () => {
   const router = inject(Router);
   const user$ = auth.user() === undefined ? auth.loadMe() : of(auth.user());
   return user$.pipe(map((user) => (user ? router.createUrlTree(['/']) : true)));
+};
+
+/**
+ * The landing page is for visitors; logged-in users go straight to their stock. While prerendering at build
+ * time there is no session (and no API), so the page itself is rendered.
+ */
+export const landingGuard: CanActivateFn = () => {
+  if (!isPlatformBrowser(inject(PLATFORM_ID))) return true;
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const user$ = auth.user() === undefined ? auth.loadMe() : of(auth.user());
+  return user$.pipe(map((user) => (user ? router.createUrlTree(['/voorraad']) : true)));
 };

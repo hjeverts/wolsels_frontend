@@ -52,9 +52,12 @@ let language: Language = FALLBACK_LANGUAGE;
 let messages: Partial<Translations> = {};
 let pluralRules = new Intl.PluralRules(localeOf(language));
 
-/** Loads the language for this browser (the chosen language, otherwise the browser's); call before bootstrapping. */
-export async function initI18n(): Promise<void> {
-  const chosen = readStored() ?? matchLanguage(navigator.languages ?? [navigator.language]) ?? FALLBACK_LANGUAGE;
+/**
+ * Loads the language for this browser (the chosen language, otherwise the browser's); call before bootstrapping.
+ * Prerendering at build time passes a fixed language instead.
+ */
+export async function initI18n(fixed?: Language): Promise<void> {
+  const chosen = fixed ?? readStored() ?? matchLanguage(navigator.languages ?? [navigator.language]) ?? FALLBACK_LANGUAGE;
   const [translations, localeData] = await LOADERS[chosen]();
   registerLocaleData(localeData.default);
   useTranslations(chosen, translations.default);

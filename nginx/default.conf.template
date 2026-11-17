@@ -7,6 +7,43 @@ map $http_x_forwarded_proto $forwarded_proto {
     ""      $scheme;
 }
 
+# Search engines. SITE_INDEXABLE=true (only for the public installation with PUBLIC_URL set) serves a robots.txt
+# that allows the landing page and the account pages, plus a sitemap. Otherwise everything is closed off:
+# robots.txt disallows all, there is no sitemap and every response carries X-Robots-Tag: noindex.
+map "${SITE_INDEXABLE}" $robots_txt {
+    "true" "User-agent: *
+Disallow: /api/
+Disallow: /voorraad
+Disallow: /mengsels
+Disallow: /productie
+Disallow: /dieren
+Disallow: /locaties
+Disallow: /account
+Disallow: /huishouden
+Disallow: /beheer
+Disallow: /uitnodiging/
+Disallow: /wachtwoord-
+Allow: /
+
+Sitemap: ${PUBLIC_URL}/sitemap.xml
+";
+    default "User-agent: *
+Disallow: /
+";
+}
+
+map "${SITE_INDEXABLE}" $robots_tag {
+    "true"  "";
+    default "noindex, nofollow";
+}
+
+# The landing page (index.html, prerendered at build time) is for visitors. With a session cookie '/' serves the
+# app shell straight away, so a logged-in user goes on to the stock without seeing the landing page first.
+map $http_cookie $start_page {
+    "~(^|;)\s*wolsels\.auth=" /index.csr.html;
+    default                    /index.html;
+}
+
 server {
     listen 8080;
     server_name _;
@@ -34,11 +71,18 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
     add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+    add_header X-Robots-Tag $robots_tag always;
+
+    # The prerendered landing page contains this placeholder for the public address (canonical link, link
+    # preview image); fill in the address of this installation.
+    sub_filter 'https://wolsels.invalid' '${PUBLIC_URL}';
+    sub_filter_once off;
 
     # Resolve the backend name each time, so that a restarted backend with a new IP stays reachable.
     resolver ${NGINX_RESOLVER} valid=10s ipv6=off;
 
-    location /api/ {
+    # ^~: never treat API paths as files (the regex locations below).
+    location ^~ /api/ {
         set $api_upstream ${API_UPSTREAM};
         proxy_pass $api_upstream;
         proxy_http_version 1.1;
@@ -70,9 +114,41 @@ server {
         try_files $uri =404;
     }
 
-    # Angular routes (e.g. /mengsels/3) always to index.html; don't cache that file itself.
+    location = /robots.txt {
+        default_type text/plain;
+        expires 1d;
+        return 200 $robots_txt;
+    }
+
+    location = /sitemap.xml {
+        if ($robots_tag) {
+            return 404;
+        }
+        default_type application/xml;
+        expires 1d;
+        return 200 '<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${PUBLIC_URL}/</loc></url>
+  <url><loc>${PUBLIC_URL}/registreren</loc></url>
+  <url><loc>${PUBLIC_URL}/inloggen</loc></url>
+</urlset>
+';
+    }
+
+    # Any other file that does not exist (e.g. /wp-login.php) is a real 404, not the app with status 200.
+    location ~ \.[A-Za-z0-9]+$ {
+        try_files $uri =404;
+    }
+
+    # Landing page for visitors, the app for logged-in users (see $start_page above).
+    location = / {
+        expires -1;
+        try_files $start_page =404;
+    }
+
+    # Angular routes (e.g. /mengsels/3) always to the app shell; don't cache that file itself.
     location / {
         expires -1;
-        try_files $uri $uri/ /index.html =404;
+        try_files $uri $uri/ /index.csr.html =404;
     }
 }

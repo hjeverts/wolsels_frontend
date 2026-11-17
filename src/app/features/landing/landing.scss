@@ -1,0 +1,157 @@
+:host {
+  display: block;
+}
+
+section {
+  margin: 0 0 56px;
+}
+
+h1 {
+  font: var(--mat-sys-display-small);
+  margin: 0 0 16px;
+}
+
+h2 {
+  font: var(--mat-sys-headline-small);
+  margin: 0 0 20px;
+}
+
+h3 {
+  font: var(--mat-sys-title-medium);
+  margin: 8px 0 4px;
+}
+
+p {
+  margin: 0;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 40px;
+  align-items: center;
+  padding-top: 16px;
+}
+
+.lead {
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+
+  p {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.feature-icon {
+  color: var(--mat-sys-primary);
+}
+
+.shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 32px 24px;
+  align-items: start;
+}
+
+.hero-visual {
+  position: relative;
+  padding: 0 32px 32px 0;
+
+  .phone {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 24%;
+    border-radius: 16px;
+  }
+}
+
+figure {
+  margin: 0;
+}
+
+figcaption {
+  margin-top: 12px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.band {
+  background: var(--mat-sys-surface-container);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.trust {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px 24px;
+
+  li {
+    display: flex;
+    gap: 12px;
+  }
+
+  mat-icon {
+    flex: none;
+    color: var(--mat-sys-primary);
+  }
+}
+
+mat-panel-title {
+  font: var(--mat-sys-title-small);
+}
+
+.cta {
+  text-align: center;
+
+  .actions {
+    justify-content: center;
+  }
+}
+
+footer {
+  text-align: center;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  padding-top: 16px;
+
+  a {
+    color: var(--mat-sys-primary);
+  }
+}
+
+@media (max-width: 800px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  h1 {
+    font: var(--mat-sys-headline-large);
+  }
+}

@@ -1,0 +1,84 @@
+<section class="hero">
+  <div class="hero-text">
+    <h1>{{ 'landing.heroTitle' | t }}</h1>
+    <p class="lead">{{ 'landing.heroText' | t }}</p>
+    <div class="actions">
+      @if (allowRegistration()) {
+        <a mat-flat-button routerLink="/registreren">{{ 'landing.register' | t }}</a>
+      }
+      <a mat-stroked-button routerLink="/inloggen">{{ 'landing.login' | t }}</a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <img class="shot" src="screenshots/voorraad.webp" width="1600" height="1000" fetchpriority="high"
+      [alt]="'landing.shotStockAlt' | t" />
+    <img class="shot phone" src="screenshots/telefoon.webp" width="780" height="1688"
+      [alt]="'landing.shotPhoneAlt' | t" />
+  </div>
+</section>
+
+<section>
+  <h2>{{ 'landing.featuresTitle' | t }}</h2>
+  <div class="features">
+    @for (f of features; track f.title) {
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <mat-icon class="feature-icon">{{ f.icon }}</mat-icon>
+          <h3>{{ f.title | t }}</h3>
+          <p>{{ f.text | t }}</p>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+</section>
+
+<section>
+  <h2>{{ 'landing.screenshotsTitle' | t }}</h2>
+  <div class="shots">
+    @for (s of screenshots; track s.src) {
+      <figure>
+        <img class="shot" [src]="s.src" [width]="s.width" [height]="s.height" loading="lazy" [alt]="s.alt | t" />
+        <figcaption>{{ s.caption | t }}</figcaption>
+      </figure>
+    }
+  </div>
+</section>
+
+<section class="band">
+  <h2>{{ 'landing.trustTitle' | t }}</h2>
+  <ul class="trust">
+    @for (item of trust; track item.text) {
+      <li><mat-icon>{{ item.icon }}</mat-icon><span>{{ item.text | t }}</span></li>
+    }
+    <li><mat-icon>translate</mat-icon><span>{{ 'landing.trustLanguages' | t }} {{ languages }}</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>{{ 'landing.faqTitle' | t }}</h2>
+  <mat-accordion>
+    @for (item of faq; track item.question) {
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>{{ item.question | t }}</mat-panel-title>
+        </mat-expansion-panel-header>
+        <p>{{ item.answer | t }}</p>
+      </mat-expansion-panel>
+    }
+  </mat-accordion>
+</section>
+
+<section class="cta">
+  <h2>{{ 'landing.ctaTitle' | t }}</h2>
+  <p>{{ 'landing.ctaText' | t }}</p>
+  <div class="actions">
+    @if (allowRegistration()) {
+      <a mat-flat-button routerLink="/registreren">{{ 'landing.register' | t }}</a>
+    }
+    <a mat-stroked-button routerLink="/inloggen">{{ 'landing.login' | t }}</a>
+  </div>
+</section>
+
+<footer>
+  <a [href]="sourceUrl" rel="noopener">{{ 'landing.openSource' | t }}</a>
+</footer>
