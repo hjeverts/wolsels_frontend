@@ -4,7 +4,7 @@
     <button mat-button class="household" [matMenuTriggerFor]="householdMenu" [attr.aria-label]="'app.chooseHousehold' | t">
       <mat-icon>home</mat-icon>
       <span class="household-name">{{ active.name }}</span>
-      <mat-icon class="caret">arrow_drop_down</mat-icon>
+      <mat-icon class="caret" iconPositionEnd>arrow_drop_down</mat-icon>
     </button>
     <mat-menu #householdMenu="matMenu">
       @for (h of households.households(); track h.id) {

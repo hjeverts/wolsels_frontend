@@ -1,5 +1,33 @@
 @use '@angular/material' as mat;
 
+// Fonts are served by this site itself (Roboto via angular.json, the icons below): no requests to Google.
+// Static icon font (weight 400, not filled), like Google Fonts serves by default; 'block' so that
+// icon names do not briefly show up as text while the font loads.
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('../node_modules/@fontsource/material-symbols-outlined/files/material-symbols-outlined-latin-400-normal.woff2')
+    format('woff2');
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
 html {
   height: 100%;
   @include mat.theme(
