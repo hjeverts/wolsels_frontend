@@ -1,9 +1,8 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/admin.guard';
-import { authGuard, guestGuard } from './core/auth.guard';
+import { authGuard, guestGuard, landingGuard } from './core/auth.guard';
 
 const appRoutes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'voorraad' },
   {
     path: 'huishouden',
     title: 'title.household',
@@ -93,6 +92,14 @@ const appRoutes: Routes = [
 ];
 
 export const routes: Routes = [
+  {
+    // Public landing page (prerendered, see app.routes.server.ts); logged-in users go on to /voorraad.
+    path: '',
+    pathMatch: 'full',
+    title: 'title.landing',
+    canActivate: [landingGuard],
+    loadComponent: () => import('./features/landing/landing').then((m) => m.Landing),
+  },
   {
     path: 'inloggen',
     title: 'title.login',

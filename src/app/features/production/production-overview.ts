@@ -62,7 +62,7 @@ const monthName = (month: number, year?: number) =>
         </div>
         <div class="stat">
           <div class="label">{{ 'production.average' | t }}</div>
-          <div class="value">{{ s.harvestCount ? s.totalGrams / s.harvestCount : null | grams }}</div>
+          <div class="value">{{ (s.harvestCount ? s.totalGrams / s.harvestCount : null) | grams }}</div>
         </div>
       </div>
 
