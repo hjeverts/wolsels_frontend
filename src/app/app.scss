@@ -1,6 +1,15 @@
+@use '@angular/material' as mat;
+
+// Via the toolbar tokens, so that Material also gives the buttons in the toolbar (household, account)
+// the readable on-primary color instead of the dark default text color. In dark mode the bright primary
+// green is glaring, so there the dark primary container is used.
 .toolbar {
-  background: var(--mat-sys-primary);
-  color: var(--mat-sys-on-primary);
+  @include mat.toolbar-overrides(
+    (
+      container-background-color: light-dark(var(--mat-sys-primary), var(--mat-sys-primary-container)),
+      container-text-color: light-dark(var(--mat-sys-on-primary), var(--mat-sys-on-primary-container)),
+    )
+  );
 }
 
 .brand {
@@ -14,11 +23,6 @@
 
 .spacer {
   flex: 1;
-}
-
-.user,
-.household {
-  --mat-button-text-label-text-color: var(--mat-sys-on-primary);
 }
 
 .household {
